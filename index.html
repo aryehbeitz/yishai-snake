@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>SNAKE - משחק נחש</title>
+  <link rel="stylesheet" href="style.css?v=1775385540">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
+</head>
+<body>
+
+  <!-- ===== HOME SCREEN ===== -->
+  <div id="home-screen">
+    <div class="header">
+      <div class="user-section" id="user-section"></div>
+      <button class="settings-btn" onclick="openSettings()" title="הגדרות">&#9881;</button>
+    </div>
+
+    <div class="title-section">
+      <h1>SNAKE</h1>
+      <p>בחר מצב משחק</p>
+    </div>
+
+    <div class="cards-container" id="cards-container"></div>
+  </div>
+
+  <!-- ===== GAME SCREEN ===== -->
+  <div id="game-screen" class="game-screen">
+    <div class="game-header">
+      <button class="game-back" onclick="backToHome()">&#8592; חזרה</button>
+      <span class="game-score">ניקוד: <span id="game-score-display">0</span></span>
+      <span class="game-mode-title" id="game-mode-title"></span>
+    </div>
+    <div class="game-canvas-wrap">
+      <canvas id="gameCanvas"></canvas>
+      <div class="game-overlay" id="game-overlay"></div>
+    </div>
+    <div class="mobile-controls">
+      <div class="mc-row">
+        <button onclick="mobileDir(0,-1)">&#9650;</button>
+      </div>
+      <div class="mc-row">
+        <button onclick="mobileDir(1,0)">&#9654;</button>
+        <button onclick="mobileDir(0,1)">&#9660;</button>
+        <button onclick="mobileDir(-1,0)">&#9664;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SETTINGS ===== -->
+  <div class="settings-overlay" id="settings-overlay" onclick="closeSettings()"></div>
+  <div class="settings-panel" id="settings-panel">
+    <h2>
+      הגדרות
+      <button class="settings-close" onclick="closeSettings()">&times;</button>
+    </h2>
+    <div id="settings-content"></div>
+  </div>
+
+  <script src="game.js?v=1775385540"></script>
+</body>
+</html>
