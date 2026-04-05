@@ -5,10 +5,44 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>ישי — משחקים</title>
   <link rel="stylesheet" href="hub.css?v=1775406888">
+  <link rel="stylesheet" href="style.css?v=1775406888">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+  <style>
+    .hub-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding: 0 0.5rem;
+    }
+    .hub-header .user-section {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .hub-refresh-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text);
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.25rem;
+      line-height: 1;
+      transition: all 0.2s;
+    }
+    .hub-refresh-btn:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: var(--neon);
+    }
+  </style>
 </head>
 <body>
   <div class="hub">
+    <div class="hub-header">
+      <div id="hub-user-section"></div>
+      <button class="hub-refresh-btn" onclick="location.reload()" title="רענון">&#8635;</button>
+    </div>
     <h1 class="hub-title">ישי</h1>
     <p class="hub-subtitle">בחר משחק</p>
     <div class="hub-grid">
@@ -41,5 +75,47 @@
     <a href="changelog.html" class="hub-changelog-link">📋 שינויים וגרסאות</a>
   </div>
   <script src="version-toast.js?v=1775406888"></script>
+  <script>
+    // Login functionality for hub page
+    let hubUser = localStorage.getItem('snakeUser') || '';
+
+    function renderHubUser() {
+      const sec = document.getElementById('hub-user-section');
+      if (!hubUser) {
+        sec.innerHTML = `
+          <input id="hub-username-input" type="text" placeholder="הכנס שם..." maxlength="20">
+          <button class="user-btn" onclick="loginHubUser()">כניסה</button>
+        `;
+        document.getElementById('hub-username-input').addEventListener('keydown', e => {
+          if (e.key === 'Enter') loginHubUser();
+        });
+      } else {
+        sec.innerHTML = `
+          <div class="user-info">
+            <span class="user-name">${hubUser}</span>
+            <button class="user-logout" onclick="logoutHubUser()">יציאה</button>
+          </div>
+        `;
+      }
+    }
+
+    function loginHubUser() {
+      const input = document.getElementById('hub-username-input');
+      const name = (input.value || '').trim();
+      if (!name) return;
+      hubUser = name;
+      localStorage.setItem('snakeUser', name);
+      renderHubUser();
+    }
+
+    function logoutHubUser() {
+      hubUser = '';
+      localStorage.removeItem('snakeUser');
+      renderHubUser();
+    }
+
+    // Initialize
+    renderHubUser();
+  </script>
 </body>
 </html>
