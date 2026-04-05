@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.4.2",
+    "date": "2026-04-05T20:34:19",
+    "changes": [
+      "feat: webhook auto-generates Hebrew changelog via Claude on push"
+    ]
+  },
+  {
     "version": "1.4.1",
     "date": "2026-04-05T17:00:00",
     "changes": [
