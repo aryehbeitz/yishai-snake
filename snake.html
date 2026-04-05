@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>SNAKE - משחק נחש</title>
-  <link rel="stylesheet" href="style.css?v=1775402883">
+  <link rel="stylesheet" href="style.css?v=1775405896">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
 </head>
 <body>
@@ -15,7 +15,13 @@
       <div class="user-section" id="user-section"></div>
       <a href="index.html" class="home-btn" title="דף הבית">🏠</a>
       <button class="refresh-btn" onclick="hardRefresh()" title="רענון">&#8635;</button>
+      <button class="customize-layout-btn" id="customize-layout-btn" onclick="enterCustomizeMode()" title="ערוך פריסה">✏️</button>
       <button class="settings-btn" onclick="openSettings()" title="התאמה אישית">🎨</button>
+    </div>
+
+    <div class="customize-banner" id="customize-banner" style="display:none">
+      <span>✏️ מצב עריכה — גרור כדי לסדר</span>
+      <button class="customize-done-btn" onclick="exitCustomizeMode()">סיום ✓</button>
     </div>
 
     <div class="title-section">
@@ -25,6 +31,13 @@
 
     <div class="cards-container" id="cards-container"></div>
   </div>
+
+  <!-- FAB for adding widgets (only in customize mode) -->
+  <button class="customize-fab" id="customize-fab" style="display:none" onclick="openWidgetPicker()" title="הוסף לדף">+</button>
+
+  <!-- Widget Picker -->
+  <div class="widget-picker-overlay" id="widget-picker-overlay" onclick="closeWidgetPicker()"></div>
+  <div class="widget-picker-panel" id="widget-picker-panel"></div>
 
   <!-- ===== GAME SCREEN ===== -->
   <div id="game-screen" class="game-screen">
@@ -102,7 +115,7 @@
     <div id="settings-content"></div>
   </div>
 
-  <script src="game.js?v=1775402883"></script>
-  <script src="version-toast.js?v=1775402883"></script>
+  <script src="game.js?v=1775405896"></script>
+  <script src="version-toast.js?v=1775405896"></script>
 </body>
 </html>

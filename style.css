@@ -855,3 +855,326 @@ body.game-active {
 }
 .card-leaderboard .lb-name { color: var(--text); }
 .card-leaderboard .lb-score { color: var(--gold); }
+
+/* ===== CUSTOMIZE LAYOUT MODE ===== */
+.customize-banner {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg3);
+  border-bottom: 2px solid var(--neon);
+  padding: .55rem 1.2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--neon);
+  font-weight: 700;
+  font-size: .9rem;
+  gap: .5rem;
+}
+.customize-done-btn {
+  background: var(--neon);
+  color: var(--bg);
+  border: none;
+  padding: .35rem 1rem;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: .85rem;
+  white-space: nowrap;
+  transition: transform .15s;
+}
+.customize-done-btn:hover { transform: scale(1.05); }
+
+.customize-layout-btn {
+  background: none;
+  border: 1px solid var(--neon-dim);
+  color: var(--neon);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 1.15rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color .2s, transform .2s;
+}
+.customize-layout-btn:hover { border-color: var(--neon); transform: scale(1.08); }
+
+/* Compact cards in edit mode */
+#home-screen.customize-mode .cards-container {
+  gap: 1rem;
+}
+#home-screen.customize-mode .card {
+  transform: scale(0.9);
+  transform-origin: top center;
+  cursor: grab;
+  border-color: var(--neon-dim);
+  transition: transform .2s, border-color .2s, box-shadow .2s, opacity .2s;
+}
+#home-screen.customize-mode .card:active { cursor: grabbing; }
+
+.card.dragging   { opacity: .35; transform: scale(.85) !important; }
+.card.drag-over  { border-color: var(--neon) !important; box-shadow: 0 0 18px #39ff1455 !important; }
+
+/* Edit overlay on each card */
+.card-edit-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+.card-drag-handle {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  background: #000c;
+  color: var(--neon);
+  border: 1px solid var(--neon-dim);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  pointer-events: all;
+  cursor: grab;
+}
+.card-drag-handle:active { cursor: grabbing; }
+.card-remove-btn {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  pointer-events: all;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: transform .15s;
+}
+.card-remove-btn:hover { transform: scale(1.15); }
+.card-order-arrows {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  pointer-events: all;
+}
+.card-arrow-btn {
+  background: #000c;
+  border: 1px solid var(--neon-dim);
+  color: var(--neon);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, border-color .15s;
+}
+.card-arrow-btn:hover:not(:disabled) { background: var(--neon); color: var(--bg); border-color: var(--neon); }
+.card-arrow-btn:disabled { opacity: .25; cursor: default; }
+
+/* FAB + button */
+.customize-fab {
+  position: fixed;
+  bottom: 2rem;
+  left: 1.5rem;
+  width: 56px;
+  height: 56px;
+  background: var(--neon);
+  color: var(--bg);
+  border: none;
+  border-radius: 50%;
+  font-size: 2rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 20px #39ff1466;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .25s cubic-bezier(.4,0,.2,1), box-shadow .2s;
+  line-height: 1;
+}
+.customize-fab:hover { transform: rotate(90deg) scale(1.1); box-shadow: 0 6px 28px #39ff1488; }
+
+/* ===== WIDGET PICKER PANEL ===== */
+.widget-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: #000b;
+  z-index: 300;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s;
+}
+.widget-picker-overlay.open { opacity: 1; pointer-events: all; }
+
+.widget-picker-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg2);
+  z-index: 301;
+  border-radius: 20px 20px 0 0;
+  border-top: 2px solid var(--neon-dim);
+  max-height: 76vh;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform .35s cubic-bezier(.4,0,.2,1);
+  padding: 1rem 1.5rem 2rem;
+}
+.widget-picker-panel.open { transform: translateY(0); }
+
+.widget-picker-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--neon-dim);
+  border-radius: 2px;
+  margin: 0 auto .9rem;
+}
+.widget-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.1rem;
+}
+.widget-picker-header h3 { color: var(--neon); font-size: 1.15rem; }
+.widget-picker-close {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 1.6rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.widget-category { margin-bottom: 1.1rem; }
+.widget-category-title {
+  color: var(--neon);
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  margin-bottom: .55rem;
+  padding-bottom: .3rem;
+  border-bottom: 1px solid var(--neon-dim);
+}
+.widget-items { display: flex; flex-wrap: wrap; gap: .45rem; }
+.widget-item {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  background: var(--bg);
+  border: 1px solid var(--neon-dim);
+  border-radius: 10px;
+  padding: .45rem .75rem;
+  cursor: pointer;
+  font-size: .82rem;
+  color: var(--text);
+  transition: border-color .2s, background .2s, color .2s;
+  user-select: none;
+}
+.widget-item:hover { border-color: var(--neon); background: var(--bg3); }
+.widget-item.added { border-color: var(--neon); background: var(--neon); color: var(--bg); font-weight: 700; }
+.widget-item-icon { font-size: 1rem; }
+.widget-item-check { font-weight: 700; margin-right: .1rem; }
+
+/* ===== WIDGET CARDS ===== */
+.widget-card {
+  background: var(--card-bg);
+  border: 2px solid var(--neon-dim);
+  border-radius: 16px;
+  width: 260px;
+  overflow: hidden;
+  position: relative;
+  transition: transform .25s, border-color .25s, box-shadow .25s;
+}
+.widget-card:hover { border-color: var(--neon); box-shadow: 0 4px 20px #39ff1422; }
+.widget-header {
+  background: var(--bg3);
+  color: var(--neon);
+  font-weight: 700;
+  font-size: .95rem;
+  padding: .6rem 1rem;
+  border-bottom: 1px solid var(--neon-dim);
+}
+.widget-body { padding: .75rem 1rem; }
+.widget-lb-table { padding: .5rem .9rem .7rem; }
+.widget-lb-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .25rem 0;
+  border-bottom: 1px solid #ffffff08;
+  font-size: .8rem;
+}
+.widget-lb-mode { color: var(--text-dim); }
+.widget-lb-name { color: var(--text); flex: 1; text-align: center; }
+.widget-lb-score { color: var(--gold); font-weight: 700; }
+.widget-empty { color: var(--text-dim); font-size: .8rem; padding: .4rem 0; text-align: center; }
+
+/* Widget setting row (speed, length, etc.) */
+.widget-setting-row {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  margin-bottom: .6rem;
+  font-size: .82rem;
+}
+.widget-setting-row:last-child { margin-bottom: 0; }
+.widget-setting-row label { flex-shrink: 0; color: var(--text); min-width: 3.5rem; }
+.widget-setting-row input[type="range"] { flex: 1; accent-color: var(--neon); }
+
+/* Clock widget */
+.widget-clock-time {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--neon);
+  text-shadow: var(--neon-glow);
+  font-family: monospace;
+  direction: ltr;
+  letter-spacing: .05em;
+  margin-bottom: .2rem;
+}
+.widget-clock-date {
+  font-size: .75rem;
+  color: var(--text-dim);
+}
+
+/* Tip widget */
+.widget-tip-text {
+  font-size: .85rem;
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 2.5rem;
+  margin-bottom: .5rem;
+}
+.widget-tip-refresh {
+  background: none;
+  border: 1px solid var(--neon-dim);
+  color: var(--neon);
+  border-radius: 8px;
+  padding: .25rem .6rem;
+  font-size: .78rem;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+.widget-tip-refresh:hover { border-color: var(--neon); background: var(--bg3); }

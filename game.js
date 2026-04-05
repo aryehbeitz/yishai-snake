@@ -21,6 +21,8 @@ const HEAD_SHAPES = {
 let state = {
   currentUser: localStorage.getItem('snakeUser') || '',
   settings: loadSettings(),
+  layout: loadLayout(),
+  customizing: false,
   currentMode: null,
   game: null,
 };
@@ -47,6 +49,16 @@ function loadSettings() {
   } catch { return def; }
 }
 function saveSettings() { localStorage.setItem('snakeSettings', JSON.stringify(state.settings)); }
+
+/* ===== LAYOUT ===== */
+function loadLayout() {
+  try {
+    const s = JSON.parse(localStorage.getItem('snakeLayout'));
+    if (s && Array.isArray(s.order)) return s;
+  } catch {}
+  return { order: ['classic','obstacles','colorful','nd-3d','nd-4d','nd-5d','ai'], hidden: [] };
+}
+function saveLayout() { localStorage.setItem('snakeLayout', JSON.stringify(state.layout)); }
 
 function getScores() {
   try { return JSON.parse(localStorage.getItem('snakeScores')) || {}; } catch { return {}; }
@@ -327,103 +339,635 @@ function renderUser() {
   }
 }
 
+const TIPS = [
+  'לחץ רווח להשהייה בכל עת',
+  'ככל שהנחש ארוך יותר — הניקוד עולה מהר יותר!',
+  'במצב מכשולים, הסלעים מתחלפים בכל תפוח שאוכלים',
+  'שנה את צבע הנחש בהגדרות 🎨',
+  'נסה את מצב רב-ממדי לחוויה מוחית מיוחדת',
+  'ה-AI בBFS תמיד מוצא את הדרך הקצרה ביותר',
+  'השיא שלך נשמר גם בשרת — גלוש מכל מכשיר!',
+  'בצבעוני: הנחש בצבעי הקשת!',
+  'בחר חמש ממד לאתגר מוחי אמיתי',
+  'הטה את הטלפון לשליטה בתנועה!',
+  'ה-AI ההמילטוני מכסה את כל הלוח בצורה שיטתית',
+  'ככל שהמהירות גבוהה יותר — הניקוד גבוה יותר',
+  'גרור כרטיסים בעריכת פריסה לשינוי הסדר',
+  'לחץ ← → בעריכה להזזת כרטיסים',
+  'אפשר להוסיף ולהסיר כרטיסים לפי רצונך',
+];
+
+let _clockInterval = null;
+function _startClock() {
+  _stopClock();
+  const visible = state.layout.order.filter(k => !state.layout.hidden.includes(k));
+  if (!visible.includes('w-clock')) return;
+  _tickClock();
+  _clockInterval = setInterval(_tickClock, 1000);
+}
+function _stopClock() { if (_clockInterval) { clearInterval(_clockInterval); _clockInterval = null; } }
+function _tickClock() {
+  const el = document.getElementById('wc-time');
+  const dl = document.getElementById('wc-date');
+  if (!el) { _stopClock(); return; }
+  const n = new Date();
+  el.textContent = n.toLocaleTimeString('he-IL');
+  if (dl) dl.textContent = n.toLocaleDateString('he-IL', { weekday:'long', day:'numeric', month:'long' });
+}
+
 function renderCards() {
   const container = document.getElementById('cards-container');
   container.innerHTML = '';
-  const s = state.settings;
+  _stopClock();
+  const layout = state.layout;
+  const visible = layout.order.filter(k => !layout.hidden.includes(k));
+  for (const key of visible) {
+    const el = buildCardEl(key);
+    if (el) container.appendChild(el);
+  }
+  setTimeout(_startClock, 50);
+}
 
-  // Classic modes
-  for (const m in MODES) {
-    const mode = MODES[m];
-    const best = state.currentUser ? getBest(state.currentUser, m) : 0;
-    const lb = getLeaderboard(m);
+const ND_SPECS = {
+  'nd-3d': { dims: 3, he: 'תלת ממד',  desc: 'נחש בחלל תלת ממדי (X,Y,Z)', icon: '🧊' },
+  'nd-4d': { dims: 4, he: 'ארבע ממד', desc: '4 צירים — W מצטרף למשחק',   icon: '🌀' },
+  'nd-5d': { dims: 5, he: 'חמש ממד',  desc: '5 צירים — אתגר מוחי מטורף', icon: '🔮' },
+};
+
+function buildCardEl(key) {
+  const s = state.settings;
+  const cm = state.customizing;
+  const layout = state.layout;
+  const visible = layout.order.filter(k => !layout.hidden.includes(k));
+  const idx = visible.indexOf(key);
+  const total = visible.length;
+
+  function editBtns() {
+    if (!cm) return '';
+    return `<div class="card-edit-overlay">
+      <div class="card-drag-handle">≡</div>
+      <button class="card-remove-btn" onclick="event.stopPropagation();removeCard('${key}')">×</button>
+      <div class="card-order-arrows">
+        <button class="card-arrow-btn" onclick="event.stopPropagation();moveCard('${key}',-1)" ${idx===0?'disabled':''}>&#8592;</button>
+        <button class="card-arrow-btn" onclick="event.stopPropagation();moveCard('${key}',1)" ${idx===total-1?'disabled':''}>&#8594;</button>
+      </div>
+    </div>`;
+  }
+
+  // MODE cards
+  if (MODES[key]) {
+    const mode = MODES[key];
+    const best = state.currentUser ? getBest(state.currentUser, key) : 0;
+    const lb = getLeaderboard(key);
     let lbHtml = '';
-    if (lb.length) {
+    if (lb.length && !cm) {
       lbHtml = '<div class="card-leaderboard">' +
-        lb.map((e, i) => `<div><span class="lb-name">${['🥇','🥈','🥉'][i] || ''} ${e.user}</span><span class="lb-score">${e.score}</span></div>`).join('') +
+        lb.map((e, i) => `<div><span class="lb-name">${['🥇','🥈','🥉'][i]||''} ${e.user}</span><span class="lb-score">${e.score}</span></div>`).join('') +
         '</div>';
     }
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `
-      <div class="card-thumb" onclick="startGame('${m}')"><canvas id="thumb-${m}"></canvas></div>
-      <div class="card-body" onclick="startGame('${m}')">
-        <h3>${mode.he}</h3>
-        <p>${mode.desc}</p>
+    const div = document.createElement('div');
+    div.className = 'card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    div.innerHTML = `
+      ${editBtns()}
+      <div class="card-thumb"${cm?'':` onclick="startGame('${key}')"`}><canvas id="thumb-${key}"></canvas></div>
+      <div class="card-body"${cm?'':` onclick="startGame('${key}')"`}>
+        <h3>${mode.he}</h3><p>${mode.desc}</p>
         ${state.currentUser && best ? `<div class="card-best">השיא שלך: ${best}</div>` : ''}
       </div>
       ${lbHtml}
-      <div class="card-actions">
-        <button class="card-play-btn" onclick="startGame('${m}')">שחק</button>
-        <button class="card-auto-btn" onclick="event.stopPropagation();startAiGame('bfs','${m}')">אוטומטי</button>
-        <button class="card-settings-toggle" onclick="event.stopPropagation();toggleCardSettings('card-settings-${m}')">&#9881;</button>
+      ${cm ? '' : `<div class="card-actions">
+        <button class="card-play-btn" onclick="startGame('${key}')">שחק</button>
+        <button class="card-auto-btn" onclick="event.stopPropagation();startAiGame('bfs','${key}')">אוטומטי</button>
+        <button class="card-settings-toggle" onclick="event.stopPropagation();toggleCardSettings('card-settings-${key}')">&#9881;</button>
       </div>
-      <div class="card-settings" id="card-settings-${m}">
-        <div class="card-setting-row"><label>מהירות</label><input type="range" min="3" max="15" value="${s.speeds[m]}" oninput="updateSpeed('${m}', this.value)"><span class="range-value" id="speed-val-${m}">${s.speeds[m]}</span></div>
-      </div>
+      <div class="card-settings" id="card-settings-${key}">
+        <div class="card-setting-row"><label>מהירות</label><input type="range" min="3" max="15" value="${s.speeds[key]}" oninput="updateSpeed('${key}', this.value)"><span class="range-value" id="speed-val-${key}">${s.speeds[key]}</span></div>
+      </div>`}
     `;
-    container.appendChild(card);
+    if (cm) setupCardDrag(div, key);
+    return div;
   }
 
-  // Section: Multi-dimensional
-  const ndTitle = document.createElement('div');
-  ndTitle.className = 'cards-section-title';
-  ndTitle.textContent = 'רב-ממדי';
-  container.appendChild(ndTitle);
-
-  const ND_MODES = {
-    '3d': { he: 'תלת ממד', desc: 'נחש בחלל תלת ממדי (X,Y,Z)', dims: 3, icon: '🧊' },
-    '4d': { he: 'ארבע ממד', desc: '4 צירים — W מצטרף למשחק', dims: 4, icon: '🌀' },
-    '5d': { he: 'חמש ממד', desc: '5 צירים — אתגר מוחי מטורף', dims: 5, icon: '🔮' },
-  };
-  for (const m in ND_MODES) {
-    const mode = ND_MODES[m];
-    const best = state.currentUser ? getBest(state.currentUser, 'nd_' + m) : 0;
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `
-      <div class="card-thumb" onclick="startNdGame(${mode.dims})" style="display:flex;align-items:center;justify-content:center;font-size:4rem;background:#111;">${mode.icon}</div>
-      <div class="card-body" onclick="startNdGame(${mode.dims})">
-        <h3>${mode.he}</h3>
-        <p>${mode.desc}</p>
+  // ND cards
+  if (ND_SPECS[key]) {
+    const spec = ND_SPECS[key];
+    const ndKey = 'nd_' + key.slice(-2);
+    const best = state.currentUser ? getBest(state.currentUser, ndKey) : 0;
+    const div = document.createElement('div');
+    div.className = 'card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    div.innerHTML = `
+      ${editBtns()}
+      <div class="card-thumb"${cm?'':` onclick="startNdGame(${spec.dims})"`} style="display:flex;align-items:center;justify-content:center;font-size:4rem;background:#111;">${spec.icon}</div>
+      <div class="card-body"${cm?'':` onclick="startNdGame(${spec.dims})"`}>
+        <h3>${spec.he}</h3><p>${spec.desc}</p>
         ${state.currentUser && best ? `<div class="card-best">השיא שלך: ${best}</div>` : ''}
       </div>
-      <div class="card-actions">
-        <button class="card-play-btn" onclick="startNdGame(${mode.dims})">שחק</button>
-        <button class="card-auto-btn" onclick="event.stopPropagation();startNdAutoGame(${mode.dims})">אוטומטי</button>
-        <button class="card-settings-toggle" onclick="event.stopPropagation();toggleCardSettings('card-settings-nd${m}')">&#9881;</button>
+      ${cm ? '' : `<div class="card-actions">
+        <button class="card-play-btn" onclick="startNdGame(${spec.dims})">שחק</button>
+        <button class="card-auto-btn" onclick="event.stopPropagation();startNdAutoGame(${spec.dims})">אוטומטי</button>
+        <button class="card-settings-toggle" onclick="event.stopPropagation();toggleCardSettings('card-settings-${key}')">&#9881;</button>
       </div>
-      <div class="card-settings" id="card-settings-nd${m}">
-        <div class="card-setting-row"><label>גודל לוח</label><input type="range" min="6" max="12" value="${s.ndBoardSize}" oninput="updateNdBoardSize(this.value)"><span class="range-value" id="ndsize-val-${m}">${s.ndBoardSize}</span></div>
-      </div>
+      <div class="card-settings" id="card-settings-${key}">
+        <div class="card-setting-row"><label>גודל לוח</label><input type="range" min="6" max="12" value="${s.ndBoardSize}" oninput="updateNdBoardSize(this.value)"><span class="range-value" id="ndsize-val-${key}">${s.ndBoardSize}</span></div>
+      </div>`}
     `;
-    container.appendChild(card);
+    if (cm) setupCardDrag(div, key);
+    return div;
   }
 
-  // Section: AI
-  const aiTitle = document.createElement('div');
-  aiTitle.className = 'cards-section-title';
-  aiTitle.textContent = 'AI אוטומטי';
-  container.appendChild(aiTitle);
+  // AI card
+  if (key === 'ai') {
+    const div = document.createElement('div');
+    div.className = 'card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    div.innerHTML = `
+      ${editBtns()}
+      <div class="card-thumb"${cm?'':` onclick="startAiGame('bfs')"`} style="display:flex;align-items:center;justify-content:center;font-size:4rem;background:#111;">🧠</div>
+      <div class="card-body"${cm?'':` onclick="startAiGame('bfs')"`}>
+        <h3>AI — BFS</h3><p>מסלול קצר ביותר לתפוח</p>
+      </div>
+      ${cm ? '' : `<div class="card-actions">
+        <button class="card-play-btn" onclick="startAiGame('bfs')">הפעל</button>
+      </div>`}
+    `;
+    if (cm) setupCardDrag(div, key);
+    return div;
+  }
 
-  const aiCard = document.createElement('div');
-  aiCard.className = 'card';
-  aiCard.innerHTML = `
-    <div class="card-thumb" onclick="startAiGame('bfs')" style="display:flex;align-items:center;justify-content:center;font-size:4rem;background:#111;">🧠</div>
-    <div class="card-body" onclick="startAiGame('bfs')">
-      <h3>AI — BFS</h3>
-      <p>מסלול קצר ביותר לתפוח</p>
-    </div>
-    <div class="card-actions">
-      <button class="card-play-btn" onclick="startAiGame('bfs')">הפעל</button>
-    </div>
-  `;
-  container.appendChild(aiCard);
+  // Widget: Leaderboard
+  if (key === 'w-lb') {
+    const div = document.createElement('div');
+    div.className = 'card widget-card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    let rows = '';
+    for (const m in MODES) {
+      const lb = getLeaderboard(m, 1);
+      if (lb.length) rows += `<div class="widget-lb-row"><span class="widget-lb-mode">${MODES[m].he}</span><span class="widget-lb-name">${lb[0].user}</span><span class="widget-lb-score">${lb[0].score}</span></div>`;
+    }
+    div.innerHTML = `
+      ${editBtns()}
+      <div class="widget-header">🏆 לוח מובילים</div>
+      <div class="widget-lb-table">${rows || '<div class="widget-empty">אין תוצאות עדיין</div>'}</div>
+    `;
+    if (cm) setupCardDrag(div, key);
+    return div;
+  }
+
+  // Widget: Personal stats
+  if (key === 'w-stats') {
+    const div = document.createElement('div');
+    div.className = 'card widget-card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    let rows = '';
+    if (state.currentUser) {
+      for (const m in MODES) {
+        const best = getBest(state.currentUser, m);
+        rows += `<div class="widget-lb-row"><span class="widget-lb-mode">${MODES[m].he}</span><span class="widget-lb-score">${best || '—'}</span></div>`;
+      }
+    }
+    div.innerHTML = `
+      ${editBtns()}
+      <div class="widget-header">📊 ${state.currentUser ? 'הניקוד של ' + state.currentUser : 'הניקוד שלי'}</div>
+      <div class="widget-lb-table">${rows || '<div class="widget-empty">היכנס כדי לראות ניקוד</div>'}</div>
+    `;
+    if (cm) setupCardDrag(div, key);
+    return div;
+  }
+
+  // Widget: Quick sound toggle
+  if (key === 'w-sound') {
+    const div = document.createElement('div');
+    div.className = 'card widget-card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    div.innerHTML = `
+      ${editBtns()}
+      <div class="widget-header">🔊 שליטת צליל</div>
+      <div class="widget-body">
+        <div class="toggle-row"><label>צלילים</label><button class="toggle ${state.settings.sound ? 'on' : ''}" onclick="toggleSound(this)"></button></div>
+      </div>
+    `;
+    if (cm) setupCardDrag(div, key);
+    return div;
+  }
+
+  // Widget: Theme / color picker
+  if (key === 'w-theme') {
+    const div = document.createElement('div');
+    div.className = 'card widget-card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    div.innerHTML = `
+      ${editBtns()}
+      <div class="widget-header">🎨 ערכת נושא</div>
+      <div class="widget-body">
+        <div class="color-picker-row">
+          ${SNAKE_COLORS.map(c => `<div class="color-swatch ${state.settings.snakeColor===c?'selected':''}" style="background:${c}" onclick="pickBodyColor('${c}',this)"></div>`).join('')}
+        </div>
+      </div>
+    `;
+    if (cm) setupCardDrag(div, key);
+    return div;
+  }
+
+  // Widget: Speed control
+  if (key === 'w-speed') {
+    const div = document.createElement('div');
+    div.className = 'card widget-card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    let sliders = Object.keys(MODES).map(m => `
+      <div class="widget-setting-row">
+        <label>${MODES[m].he} <span class="range-value" id="speed-val-${m}">${s.speeds[m]}</span></label>
+        <input type="range" min="3" max="15" value="${s.speeds[m]}" oninput="updateSpeed('${m}',this.value)">
+      </div>`).join('');
+    div.innerHTML = `${editBtns()}<div class="widget-header">⚡ מהירות משחק</div><div class="widget-body">${sliders}</div>`;
+    if (cm) setupCardDrag(div, key);
+    return div;
+  }
+
+  // Widget: Start length
+  if (key === 'w-length') {
+    const div = document.createElement('div');
+    div.className = 'card widget-card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    div.innerHTML = `
+      ${editBtns()}
+      <div class="widget-header">📏 אורך התחלה</div>
+      <div class="widget-body">
+        <div class="widget-setting-row">
+          <label>אורך <span class="range-value" id="length-val">${s.startLength}</span></label>
+          <input type="range" min="2" max="8" value="${s.startLength}" oninput="updateLength(this.value)">
+        </div>
+      </div>`;
+    if (cm) setupCardDrag(div, key);
+    return div;
+  }
+
+  // Widget: Board size
+  if (key === 'w-board') {
+    const div = document.createElement('div');
+    div.className = 'card widget-card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    const boardLabels = { auto: 'אוטו', small: 'קטן', medium: 'בינוני', large: 'גדול' };
+    const btns = Object.entries(boardLabels).map(([sz,lb]) =>
+      `<button class="style-btn ${s.boardSize===sz?'selected':''}" onclick="pickBoardSize('${sz}',this)">${lb}</button>`).join('');
+    div.innerHTML = `
+      ${editBtns()}
+      <div class="widget-header">📐 גודל לוח</div>
+      <div class="widget-body"><div class="style-picker-row">${btns}</div></div>`;
+    if (cm) setupCardDrag(div, key);
+    return div;
+  }
+
+  // Widget: Snake style
+  if (key === 'w-style') {
+    const div = document.createElement('div');
+    div.className = 'card widget-card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    div.innerHTML = `
+      ${editBtns()}
+      <div class="widget-header">🖌️ סגנון נחש</div>
+      <div class="widget-body">
+        <div class="widget-setting-row" style="margin-bottom:.5rem;">
+          <div class="style-picker-row">
+            <button class="style-btn ${s.snakeStyle==='smooth'?'selected':''}" onclick="pickStyle('smooth',this)">רצוף</button>
+            <button class="style-btn ${s.snakeStyle==='blocky'?'selected':''}" onclick="pickStyle('blocky',this)">חלקים</button>
+          </div>
+        </div>
+        <div class="widget-setting-row">
+          <label>עובי <span class="range-value" id="thickness-val">${s.snakeThickness}</span></label>
+          <input type="range" min="6" max="20" value="${s.snakeThickness}" oninput="updateThickness(this.value)">
+        </div>
+      </div>`;
+    if (cm) setupCardDrag(div, key);
+    return div;
+  }
+
+  // Widget: Random tip
+  if (key === 'w-tip') {
+    const tip = TIPS[Math.floor(Math.random() * TIPS.length)];
+    const div = document.createElement('div');
+    div.className = 'card widget-card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    div.innerHTML = `
+      ${editBtns()}
+      <div class="widget-header">💡 טיפ</div>
+      <div class="widget-body">
+        <div class="widget-tip-text" id="wtip-text">${tip}</div>
+        <button class="widget-tip-refresh" onclick="refreshWidgetTip()">🔄 טיפ חדש</button>
+      </div>`;
+    if (cm) setupCardDrag(div, key);
+    return div;
+  }
+
+  // Widget: Clock
+  if (key === 'w-clock') {
+    const div = document.createElement('div');
+    div.className = 'card widget-card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    div.innerHTML = `
+      ${editBtns()}
+      <div class="widget-header">🕐 שעון</div>
+      <div class="widget-body" style="text-align:center;">
+        <div class="widget-clock-time" id="wc-time">--:--:--</div>
+        <div class="widget-clock-date" id="wc-date"></div>
+      </div>`;
+    if (cm) setupCardDrag(div, key);
+    return div;
+  }
+
+  // Widget: My scores (detailed)
+  if (key === 'w-myscores') {
+    const div = document.createElement('div');
+    div.className = 'card widget-card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    let content = '';
+    if (!state.currentUser) {
+      content = '<div class="widget-empty">היכנס כדי לראות שיאים</div>';
+    } else {
+      content = Object.keys(MODES).map(m => {
+        const b = getBest(state.currentUser, m);
+        return `<div class="widget-lb-row"><span class="widget-lb-mode">${MODES[m].he}</span><span class="widget-lb-score">${b || '—'}</span></div>`;
+      }).join('');
+    }
+    div.innerHTML = `
+      ${editBtns()}
+      <div class="widget-header">⭐ ${state.currentUser ? 'שיאים — ' + state.currentUser : 'השיאים שלי'}</div>
+      <div class="widget-lb-table">${content}</div>`;
+    if (cm) setupCardDrag(div, key);
+    return div;
+  }
+
+  // AI — greedy
+  if (key === 'ai-greedy') {
+    const div = document.createElement('div');
+    div.className = 'card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    div.innerHTML = `
+      ${editBtns()}
+      <div class="card-thumb"${cm?'':` onclick="startAiGame('greedy')"`} style="display:flex;align-items:center;justify-content:center;font-size:4rem;background:#111;">🤖</div>
+      <div class="card-body"${cm?'':` onclick="startAiGame('greedy')"`}>
+        <h3>AI — חמדן</h3><p>תנועה חמדנית לעבר האוכל</p>
+      </div>
+      ${cm ? '' : `<div class="card-actions"><button class="card-play-btn" onclick="startAiGame('greedy')">הפעל</button></div>`}`;
+    if (cm) setupCardDrag(div, key);
+    return div;
+  }
+
+  // AI — Hamiltonian
+  if (key === 'ai-ham') {
+    const div = document.createElement('div');
+    div.className = 'card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    div.innerHTML = `
+      ${editBtns()}
+      <div class="card-thumb"${cm?'':` onclick="startAiGame('hamiltonian')"`} style="display:flex;align-items:center;justify-content:center;font-size:4rem;background:#111;">♾️</div>
+      <div class="card-body"${cm?'':` onclick="startAiGame('hamiltonian')"`}>
+        <h3>AI — המילטוני</h3><p>כיסוי שיטתי של כל הלוח</p>
+      </div>
+      ${cm ? '' : `<div class="card-actions"><button class="card-play-btn" onclick="startAiGame('hamiltonian')">הפעל</button></div>`}`;
+    if (cm) setupCardDrag(div, key);
+    return div;
+  }
+
+  // Cars link card
+  if (key === 'cars') {
+    const div = document.createElement('div');
+    div.className = 'card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    div.innerHTML = `
+      ${editBtns()}
+      <div class="card-thumb"${cm?'':` onclick="location.href='cars.html'"`} style="display:flex;align-items:center;justify-content:center;font-size:4rem;background:#111;">🏎️</div>
+      <div class="card-body"${cm?'':` onclick="location.href='cars.html'"`}>
+        <h3>מרוץ מכוניות</h3><p>התחמק ממכוניות ואסוף נקודות</p>
+      </div>
+      ${cm ? '' : `<div class="card-actions"><button class="card-play-btn" onclick="location.href='cars.html'">שחק</button></div>`}`;
+    if (cm) setupCardDrag(div, key);
+    return div;
+  }
+
+  return null;
+}
+
+function refreshWidgetTip() {
+  const el = document.getElementById('wtip-text');
+  if (el) el.textContent = TIPS[Math.floor(Math.random() * TIPS.length)];
 }
 
 function toggleCardSettings(id) {
   const el = document.getElementById(id);
   if (el) el.classList.toggle('open');
+}
+
+/* ===== CUSTOMIZE LAYOUT ===== */
+function enterCustomizeMode() {
+  state.customizing = true;
+  document.getElementById('home-screen').classList.add('customize-mode');
+  document.getElementById('customize-banner').style.display = '';
+  document.getElementById('customize-fab').style.display = '';
+  document.getElementById('customize-layout-btn').style.display = 'none';
+  renderCards();
+  setTimeout(() => { for (const m in MODES) drawCardThumbnail('thumb-'+m, m); }, 60);
+}
+
+function exitCustomizeMode() {
+  state.customizing = false;
+  document.getElementById('home-screen').classList.remove('customize-mode');
+  document.getElementById('customize-banner').style.display = 'none';
+  document.getElementById('customize-fab').style.display = 'none';
+  document.getElementById('customize-layout-btn').style.display = '';
+  saveLayout();
+  renderCards();
+  setTimeout(() => { for (const m in MODES) drawCardThumbnail('thumb-'+m, m); }, 60);
+}
+
+function removeCard(key) {
+  if (!state.layout.hidden.includes(key)) state.layout.hidden.push(key);
+  saveLayout();
+  renderCards();
+  setTimeout(() => { for (const m in MODES) drawCardThumbnail('thumb-'+m, m); }, 60);
+}
+
+function moveCard(key, delta) {
+  const layout = state.layout;
+  const visible = layout.order.filter(k => !layout.hidden.includes(k));
+  const vi = visible.indexOf(key);
+  const ni = vi + delta;
+  if (ni < 0 || ni >= visible.length) return;
+  const oi = layout.order.indexOf(key);
+  const oj = layout.order.indexOf(visible[ni]);
+  [layout.order[oi], layout.order[oj]] = [layout.order[oj], layout.order[oi]];
+  saveLayout();
+  renderCards();
+  setTimeout(() => { for (const m in MODES) drawCardThumbnail('thumb-'+m, m); }, 60);
+}
+
+/* drag-and-drop */
+let _dragSrcKey = null;
+function setupCardDrag(el, key) {
+  el.draggable = true;
+  el.addEventListener('dragstart', e => {
+    _dragSrcKey = key;
+    el.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  el.addEventListener('dragend', () => {
+    el.classList.remove('dragging');
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('drag-over'));
+  });
+  el.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (key !== _dragSrcKey) el.classList.add('drag-over');
+  });
+  el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+  el.addEventListener('drop', e => {
+    e.preventDefault();
+    el.classList.remove('drag-over');
+    if (!_dragSrcKey || _dragSrcKey === key) return;
+    const order = state.layout.order;
+    const fi = order.indexOf(_dragSrcKey);
+    const ti = order.indexOf(key);
+    if (fi >= 0 && ti >= 0) {
+      order.splice(ti, 0, order.splice(fi, 1)[0]);
+      saveLayout();
+      renderCards();
+      setTimeout(() => { for (const m in MODES) drawCardThumbnail('thumb-'+m, m); }, 60);
+    }
+  });
+
+  /* touch drag */
+  let touchClone = null, touchStartX, touchStartY;
+  el.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    _dragSrcKey = key;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    touchClone = el.cloneNode(true);
+    touchClone.style.cssText = `position:fixed;opacity:.6;pointer-events:none;z-index:9999;width:${el.offsetWidth}px;transform:scale(.9);left:${el.getBoundingClientRect().left}px;top:${el.getBoundingClientRect().top}px;`;
+    document.body.appendChild(touchClone);
+  }, { passive: true });
+  el.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (!touchClone) return;
+    const t = e.touches[0];
+    touchClone.style.left = (t.clientX - el.offsetWidth/2) + 'px';
+    touchClone.style.top  = (t.clientY - el.offsetHeight/2) + 'px';
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('drag-over'));
+    const over = document.elementFromPoint(t.clientX, t.clientY);
+    const target = over && over.closest('.card[data-card-key]');
+    if (target && target.dataset.cardKey !== key) target.classList.add('drag-over');
+  }, { passive: false });
+  el.addEventListener('touchend', e => {
+    if (touchClone) { touchClone.remove(); touchClone = null; }
+    const t = e.changedTouches[0];
+    const over = document.elementFromPoint(t.clientX, t.clientY);
+    const target = over && over.closest('.card[data-card-key]');
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('drag-over'));
+    if (target && target.dataset.cardKey && target.dataset.cardKey !== key) {
+      const order = state.layout.order;
+      const fi = order.indexOf(key);
+      const ti = order.indexOf(target.dataset.cardKey);
+      if (fi >= 0 && ti >= 0) {
+        order.splice(ti, 0, order.splice(fi, 1)[0]);
+        saveLayout();
+        renderCards();
+        setTimeout(() => { for (const m in MODES) drawCardThumbnail('thumb-'+m, m); }, 60);
+      }
+    }
+  });
+}
+
+/* ===== WIDGET PICKER ===== */
+function openWidgetPicker() {
+  renderWidgetPicker();
+  document.getElementById('widget-picker-overlay').classList.add('open');
+  document.getElementById('widget-picker-panel').classList.add('open');
+}
+function closeWidgetPicker() {
+  document.getElementById('widget-picker-overlay').classList.remove('open');
+  document.getElementById('widget-picker-panel').classList.remove('open');
+}
+
+function renderWidgetPicker() {
+  const panel = document.getElementById('widget-picker-panel');
+  const visible = state.layout.order.filter(k => !state.layout.hidden.includes(k));
+
+  const categories = [
+    { title: '🎮 מצבי משחק', items: [
+      { key: 'classic',   label: 'קלאסי',          icon: '🐍' },
+      { key: 'obstacles', label: 'מכשולים',        icon: '🪨' },
+      { key: 'colorful',  label: 'צבעוני',         icon: '🌈' },
+    ]},
+    { title: '🌀 רב-ממדי', items: [
+      { key: 'nd-3d', label: 'תלת ממד',            icon: '🧊' },
+      { key: 'nd-4d', label: 'ארבע ממד',           icon: '🌀' },
+      { key: 'nd-5d', label: 'חמש ממד',            icon: '🔮' },
+    ]},
+    { title: '🧠 AI אוטומטי', items: [
+      { key: 'ai',         label: 'AI — BFS',        icon: '🧠' },
+      { key: 'ai-greedy',  label: 'AI — חמדן',       icon: '🤖' },
+      { key: 'ai-ham',     label: 'AI — המילטוני',   icon: '♾️' },
+    ]},
+    { title: '🎯 משחקים נוספים', items: [
+      { key: 'cars', label: 'מרוץ מכוניות',        icon: '🏎️' },
+    ]},
+    { title: '🏆 ניקוד ושיאים', items: [
+      { key: 'w-lb',       label: 'לוח מובילים',    icon: '🏆' },
+      { key: 'w-stats',    label: 'הניקוד שלי',     icon: '📊' },
+      { key: 'w-myscores', label: 'שיאים אישיים',   icon: '⭐' },
+    ]},
+    { title: '⚡ הגדרות מהירות', items: [
+      { key: 'w-sound',  label: 'שליטת צליל',      icon: '🔊' },
+      { key: 'w-theme',  label: 'ערכת צבעים',      icon: '🎨' },
+      { key: 'w-speed',  label: 'מהירות משחק',     icon: '⚡' },
+      { key: 'w-length', label: 'אורך התחלה',      icon: '📏' },
+      { key: 'w-board',  label: 'גודל לוח',         icon: '📐' },
+      { key: 'w-style',  label: 'סגנון נחש',       icon: '🖌️' },
+    ]},
+    { title: '💡 מידע וכיף', items: [
+      { key: 'w-tip',   label: 'טיפ אקראי',         icon: '💡' },
+      { key: 'w-clock', label: 'שעון',              icon: '🕐' },
+    ]},
+  ];
+
+  let html = `<div class="widget-picker-handle"></div>
+    <div class="widget-picker-header">
+      <h3>+ הוסף לדף</h3>
+      <button class="widget-picker-close" onclick="closeWidgetPicker()">×</button>
+    </div>`;
+
+  for (const cat of categories) {
+    html += `<div class="widget-category"><div class="widget-category-title">${cat.title}</div><div class="widget-items">`;
+    for (const item of cat.items) {
+      const isOn = visible.includes(item.key);
+      html += `<div class="widget-item${isOn?' added':''}" onclick="toggleCardFromPicker('${item.key}',this)">
+        <span class="widget-item-icon">${item.icon}</span>
+        <span>${item.label}</span>
+        <span class="widget-item-check">${isOn?'✓':'+'}</span>
+      </div>`;
+    }
+    html += `</div></div>`;
+  }
+  panel.innerHTML = html;
+}
+
+function toggleCardFromPicker(key, el) {
+  const layout = state.layout;
+  const hidIdx = layout.hidden.indexOf(key);
+  if (hidIdx >= 0) {
+    layout.hidden.splice(hidIdx, 1);
+    el.classList.add('added');
+    el.querySelector('.widget-item-check').textContent = '✓';
+  } else {
+    layout.hidden.push(key);
+    el.classList.remove('added');
+    el.querySelector('.widget-item-check').textContent = '+';
+  }
+  if (!layout.order.includes(key)) layout.order.push(key);
+  saveLayout();
+  renderCards();
+  setTimeout(() => { for (const m in MODES) drawCardThumbnail('thumb-'+m, m); }, 60);
 }
 
 function loginUser() {
