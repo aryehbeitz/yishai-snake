@@ -30,7 +30,7 @@ function generateHebrewChanges(commits) {
   try {
     const prompt = `תרגם את הודעות הקומיט הבאות לתיאורי שינויים בעברית. כל שורה = שינוי אחד. ללא מספור, ללא מקף, רק טקסט בעברית. תמציתי וברור.\n\n${filtered.join('\n')}`;
     const result = execSync(
-      `docker exec yishai-snake claude -p --model haiku`,
+      `docker exec -i yishai-snake claude -p --model haiku`,
       { input: prompt, encoding: 'utf8', timeout: 30000 }
     ).trim();
     return result.split('\n').map(l => l.replace(/^[-*•]\s*/, '').trim()).filter(Boolean);
