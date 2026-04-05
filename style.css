@@ -861,61 +861,127 @@ body.game-active {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: var(--bg3);
+  background: linear-gradient(135deg, var(--bg3) 0%, #1a1a4e 100%);
   border-bottom: 2px solid var(--neon);
-  padding: .55rem 1.2rem;
+  padding: .5rem 1rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   color: var(--neon);
+  gap: .5rem;
+  box-shadow: 0 4px 20px #39ff1422;
+}
+.customize-banner-right {
+  display: flex;
+  flex-direction: column;
+  gap: .05rem;
+}
+.customize-banner-title {
   font-weight: 700;
-  font-size: .9rem;
+  font-size: .95rem;
+  color: var(--neon);
+}
+.customize-banner-hint {
+  font-size: .72rem;
+  color: var(--text-dim);
+}
+.customize-banner-actions {
+  display: flex;
+  align-items: center;
   gap: .5rem;
 }
+.customize-settings-btn {
+  background: var(--bg2);
+  border: 1px solid var(--neon-dim);
+  color: var(--neon);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color .2s, background .2s;
+}
+.customize-settings-btn:hover { border-color: var(--neon); background: var(--bg3); }
 .customize-done-btn {
   background: var(--neon);
   color: var(--bg);
   border: none;
-  padding: .35rem 1rem;
+  padding: .35rem .9rem;
   border-radius: 8px;
   font-weight: 700;
   cursor: pointer;
   font-size: .85rem;
   white-space: nowrap;
-  transition: transform .15s;
+  transition: transform .15s, box-shadow .15s;
 }
-.customize-done-btn:hover { transform: scale(1.05); }
+.customize-done-btn:hover { transform: scale(1.05); box-shadow: var(--neon-glow); }
 
 .customize-layout-btn {
-  background: none;
-  border: 1px solid var(--neon-dim);
+  background: var(--bg2);
+  border: 1.5px solid var(--neon);
   color: var(--neon);
-  width: 40px;
   height: 40px;
-  border-radius: 50%;
-  font-size: 1.15rem;
+  padding: 0 .9rem 0 .7rem;
+  border-radius: 20px;
+  font-size: .85rem;
+  font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: border-color .2s, transform .2s;
+  gap: .35rem;
+  transition: border-color .2s, background .2s, box-shadow .2s;
+  white-space: nowrap;
+  box-shadow: 0 0 8px #39ff1430;
+  animation: clb-pulse 2.8s ease-in-out infinite;
 }
-.customize-layout-btn:hover { border-color: var(--neon); transform: scale(1.08); }
+@keyframes clb-pulse {
+  0%,100% { box-shadow: 0 0 6px #39ff1425; border-color: var(--neon-dim); }
+  50%      { box-shadow: 0 0 14px #39ff1466; border-color: var(--neon); }
+}
+.customize-layout-btn:hover {
+  animation: none;
+  border-color: var(--neon);
+  background: var(--bg3);
+  box-shadow: 0 0 16px #39ff1455;
+}
+.clb-icon { font-size: 1.1rem; line-height: 1; }
+.clb-text { font-size: .82rem; }
+@media (max-width: 480px) {
+  .clb-text { display: none; }
+  .customize-layout-btn { width: 40px; padding: 0; border-radius: 50%; justify-content: center; }
+}
+
+/* Wobble animation for edit mode */
+@keyframes card-wobble {
+  0%   { transform: scale(0.78) rotate(-0.7deg); }
+  50%  { transform: scale(0.78) rotate(0.7deg); }
+  100% { transform: scale(0.78) rotate(-0.7deg); }
+}
 
 /* Compact cards in edit mode */
 #home-screen.customize-mode .cards-container {
-  gap: 1rem;
+  gap: .6rem;
+  padding-bottom: 8rem;
 }
 #home-screen.customize-mode .card {
-  transform: scale(0.9);
+  animation: card-wobble 0.5s ease-in-out infinite;
   transform-origin: top center;
+  margin-bottom: -58px;
   cursor: grab;
   border-color: var(--neon-dim);
-  transition: transform .2s, border-color .2s, box-shadow .2s, opacity .2s;
+  transition: border-color .2s, box-shadow .2s, opacity .2s;
 }
-#home-screen.customize-mode .card:active { cursor: grabbing; }
+#home-screen.customize-mode .card:hover {
+  animation: none;
+  transform: scale(0.82) translateY(-4px) !important;
+  box-shadow: 0 4px 16px #39ff1422 !important;
+}
+#home-screen.customize-mode .card:active { cursor: grabbing; animation: none; }
 
-.card.dragging   { opacity: .35; transform: scale(.85) !important; }
+.card.dragging   { animation: none !important; opacity: .35; transform: scale(.85) !important; }
 .card.drag-over  { border-color: var(--neon) !important; box-shadow: 0 0 18px #39ff1455 !important; }
 
 /* Edit overlay on each card */
@@ -1066,6 +1132,34 @@ body.game-active {
   cursor: pointer;
   line-height: 1;
 }
+
+.widget-picker-settings-shortcut {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg3);
+  border: 1px solid var(--neon-dim);
+  border-radius: 10px;
+  padding: .5rem .75rem;
+  margin-bottom: 1rem;
+  font-size: .8rem;
+  color: var(--text-dim);
+  gap: .5rem;
+}
+.widget-picker-settings-shortcut button {
+  background: var(--neon);
+  color: var(--bg);
+  border: none;
+  border-radius: 8px;
+  padding: .3rem .7rem;
+  font-size: .78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity .15s;
+}
+.widget-picker-settings-shortcut button:hover { opacity: .85; }
 
 .widget-category { margin-bottom: 1.1rem; }
 .widget-category-title {

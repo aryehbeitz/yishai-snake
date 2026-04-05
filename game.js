@@ -643,6 +643,36 @@ function buildCardEl(key) {
     return div;
   }
 
+  // Widget: Head customization
+  if (key === 'w-head') {
+    const div = document.createElement('div');
+    div.className = 'card widget-card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    div.innerHTML = `
+      ${editBtns()}
+      <div class="widget-header">🐍 עיצוב ראש</div>
+      <div class="widget-body">
+        <div class="widget-setting-row" style="margin-bottom:.6rem;">
+          <label style="font-size:.78rem;color:var(--text-dim);margin-bottom:.3rem;display:block;">צורת ראש</label>
+          <div class="style-picker-row">
+            ${Object.entries(HEAD_SHAPES).map(([k,v]) => `<button class="style-btn ${s.headShape===k?'selected':''}" onclick="pickHeadShape('${k}',this)">${v.he}</button>`).join('')}
+          </div>
+        </div>
+        <div class="widget-setting-row">
+          <label style="font-size:.78rem;color:var(--text-dim);margin-bottom:.3rem;display:block;">צבע ראש</label>
+          <div class="color-picker-row">
+            ${SNAKE_COLORS.map(c => `<div class="color-swatch ${s.headColor===c?'selected':''}" style="background:${c}" onclick="pickHeadColor('${c}',this)"></div>`).join('')}
+          </div>
+        </div>
+        <div class="widget-setting-row" style="margin-top:.4rem;">
+          <label>גודל ראש <span class="range-value" id="headsize-val">${s.headSize}</span></label>
+          <input type="range" min="0.8" max="2.0" step="0.1" value="${s.headSize}" oninput="updateHeadSize(this.value)">
+        </div>
+      </div>`;
+    if (cm) setupCardDrag(div, key);
+    return div;
+  }
+
   // Widget: Random tip
   if (key === 'w-tip') {
     const tip = TIPS[Math.floor(Math.random() * TIPS.length)];
@@ -671,6 +701,51 @@ function buildCardEl(key) {
       <div class="widget-body" style="text-align:center;">
         <div class="widget-clock-time" id="wc-time">--:--:--</div>
         <div class="widget-clock-date" id="wc-date"></div>
+      </div>`;
+    if (cm) setupCardDrag(div, key);
+    return div;
+  }
+
+  // Widget: Motion / tilt control
+  if (key === 'w-motion') {
+    const motionAvail = window.DeviceOrientationEvent !== undefined;
+    const div = document.createElement('div');
+    div.className = 'card widget-card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    if (!motionAvail) {
+      div.innerHTML = `
+        ${editBtns()}
+        <div class="widget-header">📱 שליטה בהטיה</div>
+        <div class="widget-body"><div class="widget-empty">לא זמין במכשיר זה</div></div>`;
+    } else {
+      div.innerHTML = `
+        ${editBtns()}
+        <div class="widget-header">📱 שליטה בהטיה</div>
+        <div class="widget-body">
+          <div class="toggle-row"><label>הטיית טלפון</label><button class="toggle ${s.motionControl ? 'on' : ''}" onclick="toggleMotion(this)"></button></div>
+          <div class="widget-setting-row" id="wmotion-sens-row" style="${s.motionControl ? '' : 'opacity:.4;pointer-events:none'}">
+            <label>רגישות <span class="range-value" id="wmotion-sens-val">${s.motionSensitivity}</span></label>
+            <input type="range" min="5" max="35" value="${s.motionSensitivity}" oninput="updateMotionSensitivity(this.value);document.getElementById('wmotion-sens-val').textContent=this.value;document.getElementById('sensitivity-val')&&(document.getElementById('sensitivity-val').textContent=this.value)">
+          </div>
+        </div>`;
+    }
+    if (cm) setupCardDrag(div, key);
+    return div;
+  }
+
+  // Widget: ND board size
+  if (key === 'w-ndsize') {
+    const div = document.createElement('div');
+    div.className = 'card widget-card' + (cm ? ' card-editable' : '');
+    div.dataset.cardKey = key;
+    div.innerHTML = `
+      ${editBtns()}
+      <div class="widget-header">🧊 גודל לוח רב-ממדי</div>
+      <div class="widget-body">
+        <div class="widget-setting-row">
+          <label>גודל <span class="range-value" id="wndsize-val">${s.ndBoardSize}×${s.ndBoardSize}</span></label>
+          <input type="range" min="6" max="12" value="${s.ndBoardSize}" oninput="updateNdBoardSize(this.value);document.getElementById('wndsize-val').textContent=this.value+'×'+this.value">
+        </div>
       </div>`;
     if (cm) setupCardDrag(div, key);
     return div;
@@ -836,23 +911,43 @@ function setupCardDrag(el, key) {
     }
   });
 
-  /* touch drag */
-  let touchClone = null, touchStartX, touchStartY;
+  /* touch drag — lazy start (8px threshold) so taps still work */
+  let touchClone = null, touchStartX, touchStartY, touchDragActive = false;
   el.addEventListener('touchstart', e => {
     if (e.touches.length !== 1) return;
-    _dragSrcKey = key;
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
-    touchClone = el.cloneNode(true);
-    touchClone.style.cssText = `position:fixed;opacity:.6;pointer-events:none;z-index:9999;width:${el.offsetWidth}px;transform:scale(.9);left:${el.getBoundingClientRect().left}px;top:${el.getBoundingClientRect().top}px;`;
-    document.body.appendChild(touchClone);
+    touchDragActive = false;
   }, { passive: true });
   el.addEventListener('touchmove', e => {
+    if (!touchStartX) return;
+    const dx = e.touches[0].clientX - touchStartX;
+    const dy = e.touches[0].clientY - touchStartY;
+    if (!touchDragActive && Math.hypot(dx, dy) < 8) return;
+    if (!touchDragActive) {
+      touchDragActive = true;
+      _dragSrcKey = key;
+      touchClone = el.cloneNode(true);
+      // Replace canvases with screenshots so clone looks correct
+      touchClone.querySelectorAll('canvas').forEach(c => {
+        const orig = el.querySelector('#' + c.id);
+        if (orig) {
+          try {
+            const img = document.createElement('img');
+            img.src = orig.toDataURL();
+            img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+            c.replaceWith(img);
+          } catch (_) {}
+        }
+      });
+      const rect = el.getBoundingClientRect();
+      touchClone.style.cssText = `position:fixed;opacity:.82;pointer-events:none;z-index:9999;width:${rect.width}px;transform:scale(.9) rotate(2deg);transition:none;left:${rect.left}px;top:${rect.top}px;`;
+      document.body.appendChild(touchClone);
+    }
     e.preventDefault();
-    if (!touchClone) return;
     const t = e.touches[0];
-    touchClone.style.left = (t.clientX - el.offsetWidth/2) + 'px';
-    touchClone.style.top  = (t.clientY - el.offsetHeight/2) + 'px';
+    touchClone.style.left = (t.clientX - el.offsetWidth / 2) + 'px';
+    touchClone.style.top  = (t.clientY - el.offsetHeight * 0.35) + 'px';
     document.querySelectorAll('.card').forEach(c => c.classList.remove('drag-over'));
     const over = document.elementFromPoint(t.clientX, t.clientY);
     const target = over && over.closest('.card[data-card-key]');
@@ -860,6 +955,8 @@ function setupCardDrag(el, key) {
   }, { passive: false });
   el.addEventListener('touchend', e => {
     if (touchClone) { touchClone.remove(); touchClone = null; }
+    if (!touchDragActive) { touchDragActive = false; touchStartX = null; return; }
+    touchDragActive = false; touchStartX = null;
     const t = e.changedTouches[0];
     const over = document.elementFromPoint(t.clientX, t.clientY);
     const target = over && over.closest('.card[data-card-key]');
@@ -924,6 +1021,11 @@ function renderWidgetPicker() {
       { key: 'w-length', label: 'אורך התחלה',      icon: '📏' },
       { key: 'w-board',  label: 'גודל לוח',         icon: '📐' },
       { key: 'w-style',  label: 'סגנון נחש',       icon: '🖌️' },
+      { key: 'w-head',   label: 'עיצוב ראש',        icon: '🐍' },
+    ]},
+    { title: '📱 שליטה ומכשיר', items: [
+      { key: 'w-motion', label: 'שליטה בהטיה',      icon: '📱' },
+      { key: 'w-ndsize', label: 'גודל לוח רב-ממדי', icon: '🧊' },
     ]},
     { title: '💡 מידע וכיף', items: [
       { key: 'w-tip',   label: 'טיפ אקראי',         icon: '💡' },
@@ -935,6 +1037,10 @@ function renderWidgetPicker() {
     <div class="widget-picker-header">
       <h3>+ הוסף לדף</h3>
       <button class="widget-picker-close" onclick="closeWidgetPicker()">×</button>
+    </div>
+    <div class="widget-picker-settings-shortcut">
+      <span>🎨 מראה נחש, מהירות, שליטה בהטיה?</span>
+      <button onclick="closeWidgetPicker();openSettings()">הגדרות מתקדמות ›</button>
     </div>`;
 
   for (const cat of categories) {
@@ -954,17 +1060,22 @@ function renderWidgetPicker() {
 
 function toggleCardFromPicker(key, el) {
   const layout = state.layout;
-  const hidIdx = layout.hidden.indexOf(key);
-  if (hidIdx >= 0) {
-    layout.hidden.splice(hidIdx, 1);
-    el.classList.add('added');
-    el.querySelector('.widget-item-check').textContent = '✓';
-  } else {
-    layout.hidden.push(key);
+  const visible = layout.order.filter(k => !layout.hidden.includes(k));
+  const isVisible = visible.includes(key);
+
+  if (isVisible) {
+    // Currently shown → hide it
+    if (!layout.hidden.includes(key)) layout.hidden.push(key);
     el.classList.remove('added');
     el.querySelector('.widget-item-check').textContent = '+';
+  } else {
+    // Currently hidden/absent → show it
+    const hidIdx = layout.hidden.indexOf(key);
+    if (hidIdx >= 0) layout.hidden.splice(hidIdx, 1);
+    if (!layout.order.includes(key)) layout.order.push(key);
+    el.classList.add('added');
+    el.querySelector('.widget-item-check').textContent = '✓';
   }
-  if (!layout.order.includes(key)) layout.order.push(key);
   saveLayout();
   renderCards();
   setTimeout(() => { for (const m in MODES) drawCardThumbnail('thumb-'+m, m); }, 60);
