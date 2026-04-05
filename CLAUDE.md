@@ -8,8 +8,10 @@ Browser-based Snake game for ישי. Pure HTML/CSS/JS, no frameworks. Served at 
 
 - `index.html` — HTML structure (home screen, game screen, settings panel)
 - `style.css` — All styling (dark theme, neon green, RTL, responsive)
-- `game.js` — Game engine, state management, rendering, sound
-- `deploy.sh` — Cache-bust script (bumps `?v=` timestamps in index.html)
+- `game.js` — Game engine, state management, rendering, sound, API sync
+- `server.js` — Scores API (Node.js, port 3460, JSON file storage)
+- `scores.json` — Persisted scores (auto-created, gitignored)
+- `deploy.sh` — Cache-bust + restart API
 - `version.txt` — Current deploy timestamp
 
 ## Architecture
@@ -21,7 +23,20 @@ Single-page app with 3 screens toggled via JS:
 
 Game loop: `setInterval` → `gameTick()` → move snake → check collisions → render via canvas.
 
-Scores stored in `localStorage` keyed by `snake_scores_{username}`.
+### Scores
+
+Dual storage: localStorage (instant) + server API (persistent).
+- On game over: saves to localStorage immediately, POSTs to `/api/scores`
+- On page load: fetches `/api/scores`, merges with localStorage (higher score wins)
+- Server stores in `scores.json` keyed by `{username: {mode: score}}`
+
+### API Endpoints (port 3460)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/scores` | Full scores object |
+| GET | `/api/leaderboard?mode=classic&limit=10` | Sorted leaderboard for a mode |
+| POST | `/api/scores` | Submit score `{user, mode, score}` |
 
 ## Game Modes
 
@@ -34,17 +49,17 @@ Scores stored in `localStorage` keyed by `snake_scores_{username}`.
 ## Deploy
 
 ```bash
-./deploy.sh          # Bumps ?v= cache buster
+./deploy.sh          # Bumps ?v= cache buster, restarts API
 git add -A && git commit -m "msg" && git push
 ```
-
-No build step. Nginx serves static files directly from this directory.
 
 ## Server
 
 - **Nginx**: `/etc/nginx/sites-available/yishai.aryeh.win`
+  - Static files served from `/home/admin/dev/yishai-snake/`
+  - `/api/` proxied to `127.0.0.1:3460`
 - **SSL**: Let's Encrypt via certbot (auto-renew)
-- **Root**: `/home/admin/dev/yishai-snake/`
+- **PM2**: `snake-api` process
 
 ## Requirements from ישי (via WhatsApp)
 
@@ -53,3 +68,4 @@ No build step. Nginx serves static files directly from this directory.
 - Settings: speed per mode, sound, snake color, starting length
 - Obstacles mode: rocks reshuffle every apple, 7 tiles ahead always clear
 - Hebrew UI
+- Persistent scores across devices

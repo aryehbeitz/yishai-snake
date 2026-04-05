@@ -39,16 +39,26 @@ function getBest(user, mode) {
   const s = getScores();
   return (s[user] && s[user][mode]) || 0;
 }
+const API_BASE = '/api';
+
 function saveBest(user, mode, score) {
+  // Save locally
   const s = getScores();
   if (!s[user]) s[user] = {};
-  if (score > (s[user][mode] || 0)) {
+  const isNew = score > (s[user][mode] || 0);
+  if (isNew) {
     s[user][mode] = score;
     localStorage.setItem('snakeScores', JSON.stringify(s));
-    return true;
   }
-  return false;
+  // Persist to server
+  fetch(`${API_BASE}/scores`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user, mode, score }),
+  }).catch(() => {});
+  return isNew;
 }
+
 function getLeaderboard(mode, limit = 3) {
   const s = getScores();
   const entries = [];
@@ -58,6 +68,28 @@ function getLeaderboard(mode, limit = 3) {
   entries.sort((a, b) => b.score - a.score);
   return entries.slice(0, limit);
 }
+
+// Sync scores from server on load
+function syncScoresFromServer() {
+  fetch(`${API_BASE}/scores`).then(r => r.json()).then(remote => {
+    const local = getScores();
+    let changed = false;
+    for (const user in remote) {
+      if (!local[user]) { local[user] = remote[user]; changed = true; continue; }
+      for (const mode in remote[user]) {
+        if ((remote[user][mode] || 0) > (local[user][mode] || 0)) {
+          local[user][mode] = remote[user][mode];
+          changed = true;
+        }
+      }
+    }
+    if (changed) {
+      localStorage.setItem('snakeScores', JSON.stringify(local));
+      renderHome();
+    }
+  }).catch(() => {});
+}
+syncScoresFromServer();
 
 /* ===== AUDIO ===== */
 let audioCtx = null;
