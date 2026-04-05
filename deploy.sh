@@ -7,5 +7,6 @@ for f in index.html snake.html cars.html changelog.html; do
   [ -f "$f" ] && sed -i "s/\?v=[0-9]*/\?v=$VER/g" "$f"
 done
 echo "$VER" > version.txt
-pm2 restart snake-api 2>/dev/null || pm2 start server.js --name snake-api
+# API runs in Docker — restart container's node process
+docker exec yishai-snake node -e "process.exit(0)" 2>/dev/null || true
 echo "✅ Deployed v$VER"

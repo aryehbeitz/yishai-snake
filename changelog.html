@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>שינויים וגרסאות</title>
-  <link rel="stylesheet" href="hub.css?v=1775406838">
+  <link rel="stylesheet" href="hub.css?v=1775406888">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
   <style>
     body { align-items: flex-start; }
@@ -135,7 +135,7 @@
         data.forEach((v, i) => {
           totalChanges += v.changes.length;
           const title = v.title || v.changes[0]?.slice(0, 50) || '';
-          const dateStr = v.date ? new Date(v.date).toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: 'numeric', hour: v.date.includes('T') ? '2-digit' : undefined, minute: v.date.includes('T') ? '2-digit' : undefined }) : '';
+          const dateStr = v.date ? new Date(v.date).toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
           const div = document.createElement('div');
           div.className = 'cl-version' + (i === 0 ? ' open cl-current' : '');
           div.innerHTML = `
