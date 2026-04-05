@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>שינויים וגרסאות</title>
+  <link rel="stylesheet" href="hub.css?v=1775400132">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+  <style>
+    body { align-items: flex-start; }
+    .changelog {
+      max-width: 640px;
+      width: 100%;
+      padding: 1.5rem;
+      margin: 0 auto;
+    }
+    .cl-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .cl-header h1 { color: var(--neon); font-size: 1.6rem; }
+    .cl-back {
+      color: var(--neon);
+      text-decoration: none;
+      border: 1px solid var(--neon-dim);
+      padding: .3rem .7rem;
+      border-radius: 8px;
+      font-size: .85rem;
+    }
+    .cl-back:hover { background: var(--neon); color: #111; }
+    .cl-version {
+      background: var(--bg2);
+      border: 1px solid #ffffff0a;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    .cl-version-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: .75rem 1rem;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .cl-version-header:hover { background: #ffffff08; }
+    .cl-version-tag {
+      background: var(--neon);
+      color: #111;
+      padding: .15rem .5rem;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: .8rem;
+      font-family: monospace;
+    }
+    .cl-version-title {
+      flex: 1;
+      margin: 0 .75rem;
+      color: var(--text);
+      font-weight: 600;
+      font-size: .95rem;
+    }
+    .cl-version-date {
+      color: var(--text-dim);
+      font-size: .75rem;
+      white-space: nowrap;
+    }
+    .cl-version-arrow {
+      color: var(--text-dim);
+      font-size: .8rem;
+      transition: transform .25s;
+      margin-inline-start: .5rem;
+    }
+    .cl-version.open .cl-version-arrow { transform: rotate(180deg); }
+    .cl-version-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .3s ease;
+    }
+    .cl-version.open .cl-version-body { max-height: 600px; }
+    .cl-version-body ul {
+      list-style: none;
+      padding: 0 1rem .75rem;
+    }
+    .cl-version-body li {
+      padding: .3rem 0;
+      border-bottom: 1px solid #ffffff06;
+      color: var(--text-dim);
+      font-size: .85rem;
+      position: relative;
+      padding-inline-start: 1.2rem;
+    }
+    .cl-version-body li::before {
+      content: '✦';
+      position: absolute;
+      inset-inline-start: 0;
+      color: var(--neon);
+      font-size: .7rem;
+    }
+    .cl-current .cl-version-tag { background: var(--gold); }
+    .cl-stats {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: .8rem;
+      padding: 1rem 0;
+      border-top: 1px solid #ffffff0a;
+      margin-top: .5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="changelog">
+    <div class="cl-header">
+      <h1>📋 שינויים וגרסאות</h1>
+      <a href="index.html" class="cl-back">🏠 חזרה</a>
+    </div>
+    <div id="cl-list"></div>
+    <div class="cl-stats" id="cl-stats"></div>
+  </div>
+  <script>
+    fetch('changelog.json?_=' + Date.now())
+      .then(r => r.json())
+      .then(data => {
+        const list = document.getElementById('cl-list');
+        // Show newest first
+        data.reverse();
+        let totalChanges = 0;
+        data.forEach((v, i) => {
+          totalChanges += v.changes.length;
+          const div = document.createElement('div');
+          div.className = 'cl-version' + (i === 0 ? ' open cl-current' : '');
+          div.innerHTML = `
+            <div class="cl-version-header" onclick="this.parentElement.classList.toggle('open')">
+              <span class="cl-version-tag">v${v.version}</span>
+              <span class="cl-version-title">${v.title}</span>
+              <span class="cl-version-date">${v.date}</span>
+              <span class="cl-version-arrow">▾</span>
+            </div>
+            <div class="cl-version-body">
+              <ul>${v.changes.map(c => '<li>' + c + '</li>').join('')}</ul>
+            </div>
+          `;
+          list.appendChild(div);
+        });
+        document.getElementById('cl-stats').textContent =
+          data.length + ' גרסאות · ' + totalChanges + ' שינויים';
+      });
+  </script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #1a1a2e;
+  --bg2: #16213e;
+  --neon: #39ff14;
+  --neon-dim: #39ff1466;
+  --neon-glow: 0 0 10px #39ff14, 0 0 20px #39ff1444;
+  --text: #e0e0e0;
+  --text-dim: #888;
+  --danger: #ff4444;
+  --gold: #ffd700;
+  --font: 'Segoe UI', Tahoma, sans-serif;
+}
+
+html { font-size: 16px; height: 100%; }
+body {
+  font-family: var(--font);
+  background: #111;
+  color: var(--text);
+  direction: rtl;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#game {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 400px;
+}
+
+.game-hud {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: .4rem .75rem;
+  width: 100%;
+  max-width: 400px;
+  justify-content: space-between;
+}
+.hud-back {
+  color: var(--neon);
+  text-decoration: none;
+  font-size: 1.2rem;
+  border: 1px solid var(--neon-dim);
+  padding: .2rem .5rem;
+  border-radius: 8px;
+}
+.hud-score { color: var(--neon); font-weight: 700; font-size: 1rem; }
+.hud-best { color: var(--gold); font-size: .85rem; }
+
+#canvas {
+  display: block;
+  background: #222;
+  border: 2px solid var(--neon-dim);
+  border-radius: 8px;
+  touch-action: none;
+}
+
+.game-overlay {
+  position: absolute;
+  inset: 0;
+  top: 36px;
+  background: #000c;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .75rem;
+  z-index: 5;
+  border-radius: 8px;
+}
+.game-overlay.hidden { display: none; }
+.game-overlay h2 { color: var(--neon); font-size: 1.8rem; text-shadow: var(--neon-glow); }
+.game-overlay p { color: var(--text-dim); font-size: .9rem; }
+.game-overlay button {
+  background: var(--neon);
+  color: #111;
+  border: none;
+  padding: .6rem 1.5rem;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.game-overlay button:hover { transform: scale(1.05); }
+
+.mobile-controls {
+  display: none;
+  gap: 1rem;
+  margin-top: .5rem;
+}
+.mc-btn {
+  width: clamp(60px, 18vw, 90px);
+  height: clamp(60px, 18vw, 90px);
+  background: var(--bg2);
+  border: 1px solid var(--neon-dim);
+  color: var(--neon);
+  font-size: 2rem;
+  border-radius: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mc-btn:active { background: var(--neon); color: #111; }
+
+@media (hover: none) and (pointer: coarse) {
+  .mobile-controls { display: flex; }
+}

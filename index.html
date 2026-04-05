@@ -3,60 +3,43 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>SNAKE - משחק נחש</title>
-  <link rel="stylesheet" href="style.css?v=1775386064">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
+  <title>ישי — משחקים</title>
+  <link rel="stylesheet" href="hub.css?v=1775400132">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
 </head>
 <body>
+  <div class="hub">
+    <h1 class="hub-title">ישי</h1>
+    <p class="hub-subtitle">בחר משחק</p>
+    <div class="hub-grid">
 
-  <!-- ===== HOME SCREEN ===== -->
-  <div id="home-screen">
-    <div class="header">
-      <div class="user-section" id="user-section"></div>
-      <button class="settings-btn" onclick="openSettings()" title="הגדרות">&#9881;</button>
-    </div>
+      <a href="snake.html" class="hub-card">
+        <div class="hub-card-icon">🐍</div>
+        <div class="hub-card-body">
+          <h2>נחש</h2>
+          <p>קלאסי, מכשולים, צבעוני, רב-ממדי, AI</p>
+        </div>
+      </a>
 
-    <div class="title-section">
-      <h1>SNAKE</h1>
-      <p>בחר מצב משחק</p>
-    </div>
+      <a href="cars.html" class="hub-card">
+        <div class="hub-card-icon">🏎️</div>
+        <div class="hub-card-body">
+          <h2>מרוץ מכוניות</h2>
+          <p>התחמק ממכוניות ואסוף נקודות</p>
+        </div>
+      </a>
 
-    <div class="cards-container" id="cards-container"></div>
-  </div>
-
-  <!-- ===== GAME SCREEN ===== -->
-  <div id="game-screen" class="game-screen">
-    <div class="game-header">
-      <button class="game-back" onclick="backToHome()">&#8592; חזרה</button>
-      <span class="game-score">ניקוד: <span id="game-score-display">0</span></span>
-      <span class="game-mode-title" id="game-mode-title"></span>
-    </div>
-    <div class="game-canvas-wrap">
-      <canvas id="gameCanvas"></canvas>
-      <div class="game-overlay" id="game-overlay"></div>
-    </div>
-    <div class="mobile-controls">
-      <div class="mc-row">
-        <button onclick="mobileDir(0,-1)">&#9650;</button>
+      <div class="hub-card hub-card-soon">
+        <div class="hub-card-icon">🧩</div>
+        <div class="hub-card-body">
+          <h2>בקרוב...</h2>
+          <p>משחקים נוספים בדרך</p>
+        </div>
       </div>
-      <div class="mc-row">
-        <button onclick="mobileDir(1,0)">&#9654;</button>
-        <button onclick="mobileDir(0,1)">&#9660;</button>
-        <button onclick="mobileDir(-1,0)">&#9664;</button>
-      </div>
+
     </div>
+    <a href="changelog.html" class="hub-changelog-link">📋 שינויים וגרסאות</a>
   </div>
-
-  <!-- ===== SETTINGS ===== -->
-  <div class="settings-overlay" id="settings-overlay" onclick="closeSettings()"></div>
-  <div class="settings-panel" id="settings-panel">
-    <h2>
-      הגדרות
-      <button class="settings-close" onclick="closeSettings()">&times;</button>
-    </h2>
-    <div id="settings-content"></div>
-  </div>
-
-  <script src="game.js?v=1775386064"></script>
+  <script src="version-toast.js?v=1775400132"></script>
 </body>
 </html>

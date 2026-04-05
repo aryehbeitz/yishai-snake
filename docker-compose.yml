@@ -1,0 +1,15 @@
+services:
+  snake:
+    build: .
+    container_name: yishai-snake
+    restart: unless-stopped
+    ports:
+      - "3460:3460"
+    volumes:
+      - /home/admin/dev/yishai-snake:/app
+      - /home/admin/.claude:/home/node/.claude
+      - /home/admin/.claude.json:/home/node/.claude.json
+    environment:
+      - NODE_ENV=production
+      - HOME=/home/node
+    user: "1000:1000"

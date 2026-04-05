@@ -75,6 +75,6 @@ const server = http.createServer(async (req, res) => {
   json(404, { error: 'not found' });
 });
 
-server.listen(PORT, '127.0.0.1', () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Snake scores API on port ${PORT}`);
 });

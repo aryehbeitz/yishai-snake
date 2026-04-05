@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>SNAKE - משחק נחש</title>
+  <link rel="stylesheet" href="style.css?v=1775400132">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
+</head>
+<body>
+
+  <!-- ===== HOME SCREEN ===== -->
+  <div id="home-screen">
+    <div class="header">
+      <div class="user-section" id="user-section"></div>
+      <a href="index.html" class="home-btn" title="דף הבית">🏠</a>
+      <button class="refresh-btn" onclick="hardRefresh()" title="רענון">&#8635;</button>
+      <button class="settings-btn" onclick="openSettings()" title="התאמה אישית">🎨</button>
+    </div>
+
+    <div class="title-section">
+      <h1>SNAKE</h1>
+      <p>בחר מצב משחק</p>
+    </div>
+
+    <div class="cards-container" id="cards-container"></div>
+  </div>
+
+  <!-- ===== GAME SCREEN ===== -->
+  <div id="game-screen" class="game-screen">
+    <div class="game-header">
+      <button class="game-back" onclick="backToHome()">&#8592; חזרה</button>
+      <span class="game-score">ניקוד: <span id="game-score-display">0</span></span>
+      <button class="game-pause" id="pause-btn" onclick="togglePause()">&#10074;&#10074;</button>
+      <span class="game-mode-title" id="game-mode-title"></span>
+    </div>
+    <div class="game-canvas-wrap">
+      <canvas id="gameCanvas"></canvas>
+      <div class="game-overlay" id="game-overlay"></div>
+    </div>
+    <div class="mobile-controls">
+      <div class="mc-row">
+        <button onclick="mobileDir(0,-1)">&#9650;</button>
+      </div>
+      <div class="mc-row">
+        <button onclick="mobileDir(1,0)">&#9654;</button>
+        <button onclick="mobileDir(0,1)">&#9660;</button>
+        <button onclick="mobileDir(-1,0)">&#9664;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ND GAME SCREEN ===== -->
+  <div id="nd-screen" class="game-screen">
+    <div class="game-header">
+      <button class="game-back" onclick="ndBackToHome()">&#8592; חזרה</button>
+      <span class="game-score">ניקוד: <span id="nd-score-display">0</span></span>
+      <button class="game-pause" id="nd-pause-btn" onclick="ndTogglePause()">&#10074;&#10074;</button>
+      <span class="game-mode-title" id="nd-mode-title"></span>
+    </div>
+    <div class="nd-body">
+      <div class="nd-canvas-area">
+        <canvas id="ndCubeCanvas" class="nd-cube-canvas"></canvas>
+        <div class="game-canvas-wrap">
+          <canvas id="ndCanvas"></canvas>
+          <div class="game-overlay hidden" id="nd-overlay"></div>
+        </div>
+      </div>
+      <div class="nd-info-panel">
+        <div class="nd-coords" id="nd-coords"></div>
+        <div class="nd-controls" id="nd-controls"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== AI GAME SCREEN ===== -->
+  <div id="ai-screen" class="game-screen">
+    <div class="game-header">
+      <button class="game-back" onclick="aiBackToHome()">&#8592; חזרה</button>
+      <span class="game-score">ניקוד: <span id="ai-score-display">0</span></span>
+      <button class="game-pause" id="ai-pause-btn" onclick="aiTogglePause()">&#10074;&#10074;</button>
+      <span class="game-mode-title" id="ai-mode-title">AI</span>
+    </div>
+    <div class="game-canvas-wrap">
+      <canvas id="aiCanvas"></canvas>
+      <div class="game-overlay hidden" id="ai-overlay"></div>
+    </div>
+    <div class="ai-info" id="ai-info">
+      <span id="ai-algo-label">BFS</span>
+      <label>מהירות <span id="ai-speed-val">10</span></label>
+      <input type="range" min="3" max="30" value="10" oninput="aiSetSpeed(this.value)">
+    </div>
+  </div>
+
+  <!-- ===== SETTINGS ===== -->
+  <div class="settings-overlay" id="settings-overlay" onclick="closeSettings()"></div>
+  <div class="settings-panel" id="settings-panel">
+    <h2>
+      התאמה אישית
+      <button class="settings-close" onclick="closeSettings()">&times;</button>
+    </h2>
+    <div id="settings-content"></div>
+  </div>
+
+  <script src="game.js?v=1775400132"></script>
+  <script src="version-toast.js?v=1775400132"></script>
+</body>
+</html>
