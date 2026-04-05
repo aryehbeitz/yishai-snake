@@ -1090,6 +1090,7 @@ function startGame(mode) {
     speed: state.settings.speeds[mode],
     colorful: modeConf.colorful,
     foodParticles: [],
+    explosionParticles: [],
     frameId: null,
   };
   state.game = game;
@@ -1294,14 +1295,42 @@ function gameTick(game) {
   }
 }
 
+function spawnExplosion(game) {
+  const colors = game.colorful
+    ? null  // will use HSL per segment
+    : [state.settings.snakeColor || '#39ff14', '#ff4444', '#ffaa00', '#ffffff'];
+  game.snake.forEach((seg, idx) => {
+    const cx = seg.x * CELL + CELL / 2;
+    const cy = seg.y * CELL + CELL / 2;
+    const count = idx === 0 ? 12 : 5;
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 5 + (idx === 0 ? 3 : 1);
+      const color = game.colorful
+        ? `hsl(${(idx * 30 + Math.random() * 60) % 360},100%,60%)`
+        : colors[Math.floor(Math.random() * colors.length)];
+      game.explosionParticles.push({
+        x: cx, y: cy,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 35 + Math.floor(Math.random() * 20),
+        maxLife: 55,
+        color,
+        r: Math.random() * 3 + 1.5,
+      });
+    }
+  });
+}
+
 function gameOver(game) {
   game.running = false;
   game.over = true;
   clearInterval(game.interval);
   stopMotionListener();
   playSound('die');
+  spawnExplosion(game);
   if (state.currentUser) saveBest(state.currentUser, state.currentMode, game.score);
-  setTimeout(() => showOverlay('gameover'), 300);
+  setTimeout(() => showOverlay('gameover'), 800);
 }
 
 /* ===== RENDERING ===== */
@@ -1379,8 +1408,25 @@ function drawGame(game) {
     ctx.globalAlpha = 1;
   }
 
+  // Explosion particles
+  for (let i = game.explosionParticles.length - 1; i >= 0; i--) {
+    const p = game.explosionParticles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vx *= 0.92;
+    p.vy *= 0.92;
+    p.life--;
+    if (p.life <= 0) { game.explosionParticles.splice(i, 1); continue; }
+    ctx.globalAlpha = p.life / p.maxLife;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
   // Game over flash
-  if (game.over) {
+  if (game.over && game.explosionParticles.length === 0) {
     ctx.fillStyle = '#ff000022';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
