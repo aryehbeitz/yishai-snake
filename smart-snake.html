@@ -1,0 +1,6307 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>🐍 סנייק חכם במיוחד</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<style>
+:root {
+  --bg-primary: #0a0e1a;
+  --bg-secondary: #111827;
+  --bg-card: #1a2332;
+  --bg-hover: #232d42;
+  --accent-primary: #3b82f6;
+  --accent-secondary: #8b5cf6;
+  --accent-success: #10b981;
+  --accent-warning: #f59e0b;
+  --accent-danger: #ef4444;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --border-color: #2d3a4f;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.4);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.5);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+}
+
+* {
+  box-sizing:border-box;
+}
+
+body {
+  margin:0;
+  background:linear-gradient(135deg, #0a0e1a 0%, #0f1724 50%, #0a0e1a 100%);
+  color:var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  text-align:center;
+  min-height:100vh;
+}
+
+h1 {
+  margin:0 0 10px;
+  font-size:1.5rem;
+  font-weight:700;
+  background:linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  text-shadow:0 2px 10px rgba(59,130,246,0.3);
+}
+
+.app-shell {
+  display:flex;
+  flex-direction:row;
+  align-items:stretch;
+  min-height:100vh;
+}
+
+.sidebar {
+  width:min(320px,100vw);
+  flex-shrink:0;
+  background:linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-card) 100%);
+  border-inline-end:1px solid var(--border-color);
+  padding:16px 12px 20px;
+  text-align:center;
+  overflow-y:auto;
+  max-height:100vh;
+  position:sticky;
+  top:0;
+  align-self:flex-start;
+  box-shadow:var(--shadow-lg);
+}
+
+.game-area {
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:16px 20px 24px;
+  background:radial-gradient(ellipse at center, #151f2e 0%, #0a0e1a 100%);
+}
+
+.score-display {
+  background:linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  padding:10px 24px;
+  border-radius:var(--radius-lg);
+  font-size:1.2rem;
+  font-weight:600;
+  margin-bottom:16px;
+  box-shadow:var(--shadow-md);
+  display:inline-block;
+}
+
+@media (max-width:720px) {
+  .app-shell {
+    flex-direction:column-reverse;
+  }
+  .sidebar {
+    width:100%;
+    max-height:none;
+    position:relative;
+    border-inline-end:none;
+    border-block-start:1px solid var(--border-color);
+  }
+}
+
+.controls {
+  margin:0;
+  line-height:2;
+}
+
+.controls-speed {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:center;
+  gap:10px 14px;
+  margin-bottom:14px;
+  padding:12px;
+  background:var(--bg-card);
+  border-radius:var(--radius-md);
+  border:1px solid var(--border-color);
+}
+
+.controls-speed label {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:13px;
+  color:var(--text-secondary);
+}
+
+.controls-top-actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  justify-content:center;
+  margin:14px 0;
+}
+
+.controls-top-actions button {
+  flex:1 1 auto;
+  min-width:110px;
+  padding:10px 14px;
+  border-radius:var(--radius-md);
+  border:none;
+  font-size:14px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.2s ease;
+}
+
+#btnPause {
+  background:linear-gradient(135deg, var(--accent-warning), #d97706);
+  color:#fff;
+}
+
+#btnPause:hover {
+  transform:translateY(-2px);
+  box-shadow:var(--shadow-md);
+}
+
+.controls button[onclick="startGame()"] {
+  background:linear-gradient(135deg, var(--accent-success), #059669);
+  color:#fff;
+}
+
+.controls button[onclick="startGame()"]:hover {
+  transform:translateY(-2px);
+  box-shadow:var(--shadow-md);
+}
+
+.controls-extra {
+  margin-top:8px;
+}
+
+.controls-extra-toggle {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  width:100%;
+  max-width:100%;
+  margin-bottom:12px;
+  background:linear-gradient(135deg, var(--bg-hover), var(--bg-card));
+  color:var(--text-primary);
+  border:1px solid var(--border-color);
+  padding:10px 14px;
+  font-size:14px;
+  font-weight:500;
+  border-radius:var(--radius-md);
+  cursor:pointer;
+  transition:all 0.2s ease;
+}
+
+.controls-extra-toggle:hover {
+  background:var(--bg-hover);
+  border-color:var(--accent-primary);
+}
+
+.controls-extra-wrap.collapsed .controls-extra-inner {
+  display:none;
+}
+
+.controls-extra-wrap.collapsed .toggle-text-expanded {
+  display:none;
+}
+
+.controls-extra-wrap:not(.collapsed) .toggle-text-collapsed {
+  display:none;
+}
+
+.switch-label {
+  margin: 8px 0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  cursor:pointer;
+  padding:8px 12px;
+  border-radius:var(--radius-md);
+  transition:background 0.2s ease;
+}
+
+.switch-label:hover {
+  background:var(--bg-hover);
+}
+
+.switch {
+  position:relative;
+  display:inline-block;
+  width:50px;
+  height:26px;
+  flex-shrink:0;
+}
+
+.switch input {
+  opacity:0;
+  width:0;
+  height:0;
+}
+
+.slider {
+  position:absolute;
+  cursor:pointer;
+  top:0;left:0;right:0;bottom:0;
+  background:linear-gradient(135deg, #374151, #1f2937);
+  transition:0.3s ease;
+  border-radius:26px;
+  border:1px solid var(--border-color);
+}
+
+.slider:before {
+  position:absolute;
+  content:"";
+  height:20px;
+  width:20px;
+  left:3px;
+  bottom:3px;
+  background:linear-gradient(135deg, #fff, #e2e8f0);
+  transition:0.3s ease;
+  border-radius:50%;
+  box-shadow:var(--shadow-sm);
+}
+
+input:checked + .slider {
+  background:linear-gradient(135deg, var(--accent-success), #059669);
+  border-color:var(--accent-success);
+}
+
+input:checked + .slider:before {
+  transform:translateX(24px);
+}
+
+canvas {
+  background:linear-gradient(135deg, #001f3f, #002855);
+  display:block;
+  margin:10px auto;
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-md);
+  border:1px solid var(--border-color);
+}
+
+input[type="number"], input[type="range"], input[type="color"], select {
+  font-size:14px;
+  padding:8px 12px;
+  border-radius:var(--radius-md);
+  border:1px solid var(--border-color);
+  background:var(--bg-card);
+  color:var(--text-primary);
+  outline:none;
+  transition:all 0.2s ease;
+}
+
+input[type="number"]:focus, input[type="range"]:focus, input[type="color"]:focus, select:focus {
+  border-color:var(--accent-primary);
+  box-shadow:0 0 0 3px rgba(59,130,246,0.2);
+}
+
+input[type="range"] {
+  padding:0;
+  height:6px;
+  -webkit-appearance:none;
+  background:linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  border-radius:3px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance:none;
+  width:18px;
+  height:18px;
+  background:#fff;
+  border-radius:50%;
+  cursor:pointer;
+  box-shadow:var(--shadow-md);
+}
+
+button {
+  cursor:pointer;
+  font-family:inherit;
+}
+
+.btn-3d-mode, .btn-interactive-3d, .btn-4d-mode {
+  background:linear-gradient(135deg, var(--bg-hover), var(--bg-card));
+  color:var(--text-primary);
+  border:1px solid var(--border-color);
+  padding:10px 16px;
+  border-radius:var(--radius-md);
+  cursor:pointer;
+  font-size:14px;
+  font-weight:500;
+  margin-top:8px;
+  width:100%;
+  transition:all 0.2s ease;
+}
+
+.btn-3d-mode:hover, .btn-interactive-3d:hover, .btn-4d-mode:hover {
+  background:var(--bg-hover);
+  border-color:var(--accent-primary);
+  transform:translateY(-2px);
+  box-shadow:var(--shadow-md);
+}
+
+.btn-3d-mode.active {
+  background:linear-gradient(135deg, var(--accent-success), #059669);
+  border-color:var(--accent-success);
+}
+
+.btn-interactive-3d.active {
+  background:linear-gradient(135deg, var(--accent-secondary), #7c3aed);
+  border-color:var(--accent-secondary);
+}
+
+.btn-4d-mode.active {
+  background:linear-gradient(135deg, #ec4899, #db2777);
+  border-color:#ec4899;
+}
+
+#overlay {
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.85);
+  backdrop-filter:blur(8px);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  z-index:100;
+}
+
+#overlay h2 {
+  font-size:2.5rem;
+  margin:10px;
+  background:linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+
+.bigBtn {
+  font-size:1.2rem;
+  padding:14px 32px;
+  margin-top:20px;
+  background:linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color:#fff;
+  border:none;
+  border-radius:var(--radius-lg);
+  cursor:pointer;
+  font-weight:600;
+  transition:all 0.2s ease;
+}
+
+.bigBtn:hover {
+  transform:translateY(-3px);
+  box-shadow:var(--shadow-lg);
+}
+
+.prediction-line {
+  pointer-events:none;
+}
+
+.version-folder-strip {
+  margin:10px 0;
+  border:1px solid var(--border-color);
+  border-radius:var(--radius-lg);
+  background:linear-gradient(180deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+  overflow:hidden;
+  box-shadow:var(--shadow-sm);
+}
+
+.version-folder-bar {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:12px 14px;
+  min-height:44px;
+  background:linear-gradient(135deg, var(--bg-hover), var(--bg-card));
+  color:var(--text-primary);
+  font-size:14px;
+  font-weight:500;
+  white-space:nowrap;
+  cursor:pointer;
+  transition:all 0.2s ease;
+}
+
+.version-folder-bar:hover {
+  background:linear-gradient(135deg, var(--bg-hover), #2a3550);
+}
+
+.version-folder-strip.is-open .version-folder-bar {
+  border-bottom:1px solid var(--border-color);
+}
+
+.version-folder-bar .vfb-title {
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-align:right;
+}
+
+.version-menu-dots {
+  flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  padding:8px 12px;
+  margin:0;
+  border:none;
+  border-radius:var(--radius-md);
+  background:linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color:#fff;
+  cursor:pointer;
+  font-family:inherit;
+  line-height:0;
+  transition:all 0.2s ease;
+}
+
+.version-menu-dots:hover {
+  transform:scale(1.05);
+  box-shadow:var(--shadow-md);
+}
+
+.version-menu-dots:focus-visible {
+  outline:2px solid var(--accent-primary);
+  outline-offset:2px;
+}
+
+.version-menu-dots .vdot {
+  display:block;
+  width:4px;
+  height:4px;
+  border-radius:50%;
+  background:#fff;
+  opacity:0.95;
+}
+
+.version-changelog-list {
+  list-style:none;
+  margin:4px 0 10px;
+  padding:0;
+  max-height:180px;
+  overflow-y:auto;
+  text-align:right;
+  font-size:11px;
+  line-height:1.35;
+}
+
+.version-changelog-list li {
+  padding:5px 6px;
+  border-bottom:1px solid #1a3a5c;
+  color:#ccc;
+}
+
+.version-changelog-list .vc-time {
+  color:#6a8ab0;
+  font-size:10px;
+  margin-inline-end:6px;
+}
+
+.version-changelog-list .vc-src {
+  color:#5a7a9a;
+  font-size:9px;
+  display:block;
+  margin-top:2px;
+}
+
+.btn-mini-clear {
+  font-size:12px;
+  padding:5px 8px;
+  margin-top:4px;
+  background:#2a4048;
+  color:#ddd;
+  border:1px solid #3a6a7a;
+  border-radius:6px;
+  cursor:pointer;
+  width:100%;
+}
+
+.version-folder-badge {
+  flex-shrink:0;
+  background:#264a6e;
+  border-radius:10px;
+  padding:2px 8px;
+  font-size:12px;
+}
+
+.version-folder-panel {
+  border-top:1px solid #2a5080;
+  padding:10px;
+  font-size:13px;
+  text-align:right;
+  line-height:1.45;
+  max-height:min(65vh,420px);
+  overflow-y:auto;
+}
+
+.version-folder-panel[hidden] {
+  display:none !important;
+}
+
+.version-mini {
+  color:#aaa;
+  font-size:11px;
+  margin-bottom:8px;
+}
+
+.version-hint {
+  font-size:11px;
+  color:#888;
+  margin:8px 0;
+}
+
+.version-hint code {
+  background:#1a2f4a;
+  padding:2px 6px;
+  border-radius:4px;
+  font-size:10px;
+}
+
+.version-section-label {
+  font-weight:bold;
+  color:#8ecfff;
+  margin:10px 0 6px;
+  font-size:12px;
+}
+
+.version-panel-actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-bottom:6px;
+}
+
+.version-panel-actions button {
+  font-size:13px;
+  padding:6px 10px;
+}
+
+.version-snapshots-list {
+  list-style:none;
+  margin:4px 0;
+  padding:0;
+  max-height:200px;
+  overflow-y:auto;
+  text-align:right;
+}
+
+.version-snapshots-list li {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+  padding:6px 4px;
+  border-bottom:1px solid #1a3a5c;
+}
+
+.version-snapshots-list li span.ver-name {
+  font-weight:bold;
+  color:#ffd54f;
+}
+
+.version-snapshots-list .ver-actions {
+  display:flex;
+  gap:4px;
+  flex-shrink:0;
+}
+
+.version-snapshots-list .ver-actions button {
+  padding:4px 8px;
+  font-size:13px;
+}
+
+button.version-clear-btn {
+  background:#4a2a2a;
+  color:#fff;
+  margin-top:10px;
+  width:100%;
+  padding:8px;
+}
+
+#debugDetails {
+  margin-top:10px;
+  font-size:13px;
+  color:#aaa;
+  display:block;
+}
+
+#debugDetails.hidden {
+  display:none;
+}
+
+#debugInfo.hidden {
+  display:none;
+}
+
+.debug-grid {
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:6px 10px;
+  text-align:right;
+}
+
+.debug-item {
+  background:#0f2034;
+  padding:6px 8px;
+  border-radius:4px;
+  border:1px solid #1a3a5c;
+}
+
+.debug-label {
+  color:#8ecfff;
+  font-size:11px;
+  margin-bottom:2px;
+}
+
+.debug-value {
+  color:#fff;
+  font-family:monospace;
+  font-size:12px;
+}
+
+.game-container-3d {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  justify-content:center;
+  padding:10px;
+}
+
+.view-panel {
+  background:#0d2438;
+  border:1px solid #1a3a5c;
+  border-radius:8px;
+  padding:8px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.view-panel h4 {
+  margin:0 0 6px;
+  font-size:12px;
+  color:#8ecfff;
+  text-align:center;
+}
+
+.view-panel canvas {
+  margin:0;
+  background:#001f3f;
+  border-radius:4px;
+}
+
+.view-panel-3d {
+  background:#0d2438;
+  border:1px solid #1a3a5c;
+  border-radius:8px;
+  padding:6px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  position:relative;
+}
+
+.view-panel-3d h4 {
+  margin:0 0 4px;
+  font-size:11px;
+  color:#8ecfff;
+  text-align:center;
+}
+
+.view-panel-3d canvas {
+  margin:0;
+  background:#001f3f;
+  border-radius:4px;
+}
+
+.view-panel-3d[data-view="xy"]::after {
+  content:"X →";
+  position:absolute;
+  bottom:14px;
+  right:14px;
+  background:rgba(59,130,246,0.9);
+  color:#fff;
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:700;
+  pointer-events:none;
+}
+
+.view-panel-3d[data-view="xy"]::before {
+  content:"↑ Y";
+  position:absolute;
+  top:14px;
+  left:14px;
+  background:rgba(59,130,246,0.9);
+  color:#fff;
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:700;
+  pointer-events:none;
+}
+
+.view-panel-3d[data-view="xz"]::after {
+  content:"X →";
+  position:absolute;
+  bottom:14px;
+  right:14px;
+  background:rgba(139,92,246,0.9);
+  color:#fff;
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:700;
+  pointer-events:none;
+}
+
+.view-panel-3d[data-view="xz"]::before {
+  content:"↑ Z";
+  position:absolute;
+  top:14px;
+  left:14px;
+  background:rgba(139,92,246,0.9);
+  color:#fff;
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:700;
+  pointer-events:none;
+}
+
+.view-panel-3d[data-view="yz"]::after {
+  content:"Y →";
+  position:absolute;
+  bottom:14px;
+  right:14px;
+  background:rgba(236,72,153,0.9);
+  color:#fff;
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:700;
+  pointer-events:none;
+}
+
+.view-panel-3d[data-view="yz"]::before {
+  content:"↑ Z";
+  position:absolute;
+  top:14px;
+  left:14px;
+  background:rgba(236,72,153,0.9);
+  color:#fff;
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:700;
+  pointer-events:none;
+}
+
+.view-panel-3d[data-view="iso"] {
+  width:100%;
+  max-width:600px;
+  margin:0 auto 16px;
+  order:0;
+}
+
+.view-panel-3d[data-view="follower3d"] {
+  width:100%;
+  max-width:500px;
+  margin:10px auto;
+  order:10;
+}
+
+.view-panel-3d[data-view="xy"] { order:20; }
+.view-panel-3d[data-view="xz"] { order:21; }
+.view-panel-3d[data-view="yz"] { order:22; }
+
+.game-container-3d {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  justify-content:center;
+  padding:12px;
+}
+
+/* Force line break after iso view */
+.game-container-3d .view-panel-3d[data-view="iso"]::after {
+  content:"";
+  flex-basis:100%;
+  height:0;
+  display:block;
+  margin:8px 0;
+}
+
+/* Force line break after follower views */
+.game-container-3d .view-panel-3d[data-view="follower2"]::after {
+  content:"";
+  flex-basis:100%;
+  height:0;
+  display:block;
+  margin:8px 0;
+}
+
+.view-panel-3d[data-view="iso"] h4 {
+  font-size:14px;
+  font-weight:600;
+  color:var(--accent-primary);
+  margin-bottom:8px;
+}
+
+.view-panel-3d[data-view="iso"] canvas {
+  border:2px solid var(--accent-primary);
+  box-shadow:0 0 20px rgba(59,130,246,0.3);
+}
+
+.view-panel.hidden {
+  display:none;
+}
+
+.layout-manager-modal {
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.85);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:100;
+}
+
+.layout-manager-modal.visible {
+  display:flex;
+}
+
+.layout-manager-content {
+  background:#0d2438;
+  border:2px solid #3a6a9c;
+  border-radius:12px;
+  padding:20px;
+  max-width:500px;
+  width:90%;
+  max-height:80vh;
+  overflow-y:auto;
+}
+
+.layout-manager-content h3 {
+  margin:0 0 15px;
+  color:#8ecfff;
+  text-align:center;
+}
+
+.layout-item {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:8px 10px;
+  margin:6px 0;
+  background:#0f2034;
+  border:1px solid #1a3a5c;
+  border-radius:6px;
+}
+
+.layout-item label {
+  flex:1;
+  color:#fff;
+  font-size:13px;
+}
+
+.layout-item input[type="number"] {
+  width:50px;
+  margin:0 8px;
+}
+
+.layout-item input[type="checkbox"] {
+  width:18px;
+  height:18px;
+}
+
+.layout-manager-actions {
+  display:flex;
+  gap:10px;
+  margin-top:15px;
+}
+
+.layout-manager-actions button {
+  flex:1;
+  padding:10px;
+  font-size:14px;
+}
+
+.btn-3d-mode {
+  background:#2a5080;
+  color:#fff;
+  border:1px solid #3a6a9c;
+  padding:8px 12px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:14px;
+  margin-top:8px;
+  width:100%;
+}
+
+.btn-3d-mode.active {
+  background:#4CAF50;
+  border-color:#5CAF50;
+}
+
+.leaderboard-btn {
+  background:linear-gradient(135deg, #f59e0b, #d97706);
+  color:#fff;
+  border:none;
+  padding:10px 16px;
+  border-radius:var(--radius-lg);
+  cursor:pointer;
+  font-size:14px;
+  font-weight:600;
+  margin:10px 0;
+  width:100%;
+  transition:all 0.2s ease;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+
+.leaderboard-btn:hover {
+  transform:translateY(-2px);
+  box-shadow:var(--shadow-md);
+}
+
+.leaderboard-popup {
+  position:fixed;
+  top:80px;
+  right:20px;
+  left:auto;
+  transform:none;
+  width:280px;
+  background:var(--bg-card);
+  border:2px solid var(--accent-warning);
+  border-radius:var(--radius-lg);
+  padding:16px;
+  z-index:1000;
+  max-height:70vh;
+  overflow-y:auto;
+  box-shadow:var(--shadow-lg);
+  display:none;
+}
+
+.leaderboard-popup.visible {
+  display:block;
+}
+
+.leaderboard-popup h3 {
+  margin:0 0 14px;
+  color:var(--accent-warning);
+  text-align:center;
+  font-size:16px;
+  font-weight:700;
+  padding-top:24px;
+}
+
+.leaderboard-section {
+  margin-bottom:14px;
+  padding-bottom:14px;
+  border-bottom:1px solid var(--border-color);
+}
+
+.leaderboard-section:last-child {
+  border-bottom:none;
+  margin-bottom:0;
+  padding-bottom:0;
+}
+
+.leaderboard-section h4 {
+  margin:0 0 8px;
+  color:var(--text-secondary);
+  font-size:12px;
+  font-weight:600;
+}
+
+.leaderboard-list {
+  list-style:none;
+  padding:0;
+  margin:0;
+}
+
+.leaderboard-list li {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:6px 10px;
+  background:var(--bg-hover);
+  border-radius:var(--radius-md);
+  margin-bottom:4px;
+  font-size:12px;
+}
+
+.leaderboard-list li:nth-child(1) {
+  background:linear-gradient(135deg, #fbbf24, #d97706);
+  color:#000;
+}
+
+.leaderboard-list li:nth-child(2) {
+  background:linear-gradient(135deg, #94a3b8, #64748b);
+  color:#fff;
+}
+
+.leaderboard-list li:nth-child(3) {
+  background:linear-gradient(135deg, #b45309, #92400e);
+  color:#fff;
+}
+
+.leaderboard-rank {
+  font-weight:700;
+  margin-right:6px;
+  min-width:24px;
+}
+
+.leaderboard-score {
+  font-weight:700;
+  color:var(--accent-warning);
+  font-size:13px;
+}
+
+.leaderboard-date {
+  font-size:10px;
+  color:var(--text-secondary);
+  font-weight:400;
+}
+
+.leaderboard-list li:nth-child(1) .leaderboard-date,
+.leaderboard-list li:nth-child(2) .leaderboard-date,
+.leaderboard-list li:nth-child(3) .leaderboard-date {
+  color:rgba(255,255,255,0.8);
+}
+
+.mode-selector {
+  display:flex;
+  gap:8px;
+  margin:12px 0;
+  padding:8px;
+  background:linear-gradient(135deg, var(--bg-card), var(--bg-hover));
+  border-radius:50px;
+  border:1px solid var(--border-color);
+  box-shadow:var(--shadow-sm);
+}
+
+.mode-selector-btn {
+  flex:1;
+  padding:12px 20px;
+  border:none;
+  border-radius:40px;
+  background:transparent;
+  color:var(--text-secondary);
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.3s ease;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+
+.mode-selector-btn:hover {
+  background:rgba(255,255,255,0.1);
+  color:var(--text-primary);
+}
+
+.mode-selector-btn.active[data-mode="2d"] {
+  background:linear-gradient(135deg, var(--accent-success), #059669);
+  color:#fff;
+  box-shadow:var(--shadow-md);
+  transform:scale(1.02);
+}
+
+.mode-selector-btn.active[data-mode="3d"] {
+  background:linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color:#fff;
+  box-shadow:var(--shadow-md);
+  transform:scale(1.02);
+}
+
+.mode-selector-btn.active[data-mode="4d"] {
+  background:linear-gradient(135deg, #ec4899, #db2777);
+  color:#fff;
+  box-shadow:var(--shadow-md);
+  transform:scale(1.02);
+}
+
+.interactive-3d-container {
+  position:relative;
+  width:100%;
+  max-width:600px;
+  margin:10px auto;
+  border:2px solid #3a6a9c;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+#interactive3dCanvas {
+  width:100%;
+  height:500px;
+  display:block;
+  background:#001f3f;
+  cursor:grab;
+}
+
+#interactive3dCanvas:active {
+  cursor:grabbing;
+}
+
+.interactive-3d-hint {
+  position:absolute;
+  bottom:10px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(0,0,0,0.7);
+  color:#fff;
+  padding:6px 12px;
+  border-radius:20px;
+  font-size:12px;
+  pointer-events:none;
+  opacity:0.8;
+}
+
+.btn-interactive-3d {
+  background:#6a3a9c;
+  color:#fff;
+  border:1px solid #8a5abc;
+  padding:10px 16px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:15px;
+  margin-top:8px;
+  width:100%;
+}
+
+.btn-interactive-3d.active {
+  background:#9c3a8a;
+  border-color:#bc5a9a;
+}
+
+.btn-4d-mode {
+  background:#9c3a6a;
+  color:#fff;
+  border:1px solid #bc5a8a;
+  padding:10px 16px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:15px;
+  margin-top:8px;
+  width:100%;
+}
+
+.btn-4d-mode.active {
+  background:#3a9c5a;
+  border-color:#5abc7a;
+}
+
+.game-container-4d {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  justify-content:center;
+  padding:10px;
+}
+
+.view-panel-4d {
+  background:#0d2438;
+  border:1px solid #1a3a5c;
+  border-radius:8px;
+  padding:8px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.view-panel-4d h4 {
+  margin:0 0 6px;
+  font-size:12px;
+  color:#8ecfff;
+  text-align:center;
+}
+
+.view-panel-4d canvas {
+  margin:0;
+  background:#001f3f;
+  border-radius:4px;
+}
+
+.view-panel-4d[data-view="hypercube"] {
+  width:100%;
+  max-width:850px;
+  margin:0 auto 10px;
+  order:0;
+}
+
+.view-panel-4d[data-view="w0"] { order:10; }
+.view-panel-4d[data-view="w1"] { order:11; }
+.view-panel-4d[data-view="w2"] { order:12; }
+.view-panel-4d[data-view="w3"] { order:13; }
+.view-panel-4d[data-view="w4"] { order:14; display:none; }
+.view-panel-4d[data-view="w5"] { order:15; display:none; }
+.view-panel-4d[data-view="w6"] { order:16; display:none; }
+.view-panel-4d[data-view="w7"] { order:17; display:none; }
+
+.view-panel-4d[data-view="xy"] { order:20; }
+.view-panel-4d[data-view="zw"] { order:21; }
+.view-panel-4d[data-view="xz"] { order:22; }
+.view-panel-4d[data-view="yw"] { order:23; }
+
+.view-panel-4d[data-view="xy"] {
+  position:relative;
+}
+.view-panel-4d[data-view="xy"]::after {
+  content:"X →";
+  position:absolute;
+  bottom:14px;
+  right:14px;
+  background:rgba(59,130,246,0.9);
+  color:#fff;
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:700;
+  pointer-events:none;
+}
+.view-panel-4d[data-view="xy"]::before {
+  content:"↑ Y";
+  position:absolute;
+  top:14px;
+  left:14px;
+  background:rgba(59,130,246,0.9);
+  color:#fff;
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:700;
+  pointer-events:none;
+}
+
+.view-panel-4d[data-view="zw"] {
+  position:relative;
+}
+.view-panel-4d[data-view="zw"]::after {
+  content:"↑ Z";
+  position:absolute;
+  bottom:14px;
+  right:14px;
+  background:rgba(139,92,246,0.9);
+  color:#fff;
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:700;
+  pointer-events:none;
+}
+.view-panel-4d[data-view="zw"]::before {
+  content:"↑ W";
+  position:absolute;
+  top:14px;
+  left:14px;
+  background:rgba(139,92,246,0.9);
+  color:#fff;
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:700;
+  pointer-events:none;
+}
+
+.view-panel-4d[data-view="xz"] {
+  position:relative;
+}
+.view-panel-4d[data-view="xz"]::after {
+  content:"X →";
+  position:absolute;
+  bottom:14px;
+  right:14px;
+  background:rgba(236,72,153,0.9);
+  color:#fff;
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:700;
+  pointer-events:none;
+}
+.view-panel-4d[data-view="xz"]::before {
+  content:"↑ Z";
+  position:absolute;
+  top:14px;
+  left:14px;
+  background:rgba(236,72,153,0.9);
+  color:#fff;
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:700;
+  pointer-events:none;
+}
+
+.view-panel-4d[data-view="yw"] {
+  position:relative;
+}
+.view-panel-4d[data-view="yw"]::after {
+  content:"↑ Y";
+  position:absolute;
+  bottom:14px;
+  right:14px;
+  background:rgba(245,158,11,0.9);
+  color:#fff;
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:700;
+  pointer-events:none;
+}
+.view-panel-4d[data-view="yw"]::before {
+  content:"↑ W";
+  position:absolute;
+  top:14px;
+  left:14px;
+  background:rgba(245,158,11,0.9);
+  color:#fff;
+  padding:4px 10px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:700;
+  pointer-events:none;
+}
+
+.view-panel-4d[data-view="follower"] {
+  width:100%;
+  max-width:450px;
+  margin:10px auto;
+  order:30;
+}
+.view-panel-4d[data-view="follower4d"] {
+  width:100%;
+  max-width:500px;
+  margin:10px auto;
+  order:30;
+}
+.view-panel-4d[data-view="follower4d"] h4 {
+  color:var(--accent-secondary);
+  font-weight:600;
+}
+.view-panel-4d[data-view="follower4d"] canvas {
+  border:2px solid var(--accent-secondary);
+  box-shadow:0 0 15px rgba(139,92,246,0.3);
+}
+.view-panel-4d[data-view="follower2"] {
+  width:100%;
+  max-width:450px;
+  margin:10px auto;
+  order:31;
+}
+
+.view-panel-4d[data-view="cube0"] { order:40; }
+.view-panel-4d[data-view="cube1"] { order:41; }
+.view-panel-4d[data-view="cube2"] { order:42; }
+.view-panel-4d[data-view="cube3"] { order:43; }
+.view-panel-4d[data-view="cube4"] { order:44; }
+.view-panel-4d[data-view="cube5"] { order:45; }
+.view-panel-4d[data-view="cube6"] { order:46; }
+.view-panel-4d[data-view="cube7"] { order:47; }
+
+.game-container-4d {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  justify-content:center;
+  padding:10px;
+}
+
+.game-container-4d::after {
+  content:"";
+  flex-basis:100%;
+  height:0;
+  order:9;
+}
+.game-container-4d::before {
+  content:"";
+  flex-basis:100%;
+  height:0;
+  order:19;
+}
+</style>
+
+</head>
+<body>
+
+<div class="app-shell">
+
+<aside class="sidebar">
+<div style="margin-bottom:12px;">
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-secondary);text-decoration:none;font-size:13px;">🏠 דף הבית</a>
+</div>
+<div class="controls">
+
+<div class="controls-speed">
+<label>
+מהירות:
+<input type="range" id="speedRange" min="2" max="100" value="20">
+</label>
+<label>
+ערך:
+<input type="number" id="speedInput" value="20" min="2" max="100" style="width:60px">
+</label>
+</div>
+
+<div class="controls-top-actions" style="margin:8px 0;">
+<button type="button" id="btnPause" onclick="togglePause()">⏸ השהה</button>
+<button type="button" onclick="startGame()">🔄 התחל מחדש</button>
+</div>
+
+<button type="button" class="leaderboard-btn" onclick="toggleLeaderboard()">🏆 שיאים מובילים</button>
+
+<div class="mode-selector">
+<button type="button" class="mode-selector-btn active" data-mode="2d" onclick="setGameMode('2d')">📐 דו מימדי</button>
+<button type="button" class="mode-selector-btn" data-mode="3d" onclick="setGameMode('3d')">🎮 תלת מימדי</button>
+<button type="button" class="mode-selector-btn" data-mode="4d" onclick="setGameMode('4d')">🔷 ארבע מימדי</button>
+</div>
+
+<div class="controls-extra controls-extra-wrap" id="controlsExtraWrap">
+<button type="button" class="controls-extra-toggle" id="toggleExtraControls" aria-expanded="true">
+<span class="toggle-text-expanded">▲ הסתר הגדרות ופעולות נוספות</span>
+<span class="toggle-text-collapsed">▼ הגדרות ופעולות נוספות</span>
+</button>
+<div class="controls-extra-inner" id="controlsExtraInner">
+
+<label>
+גודל לוח:
+<input type="number" id="size" value="40">
+</label>
+
+<label>
+צבע נחש:
+<input type="color" id="snakeColor" value="#00ff00">
+</label>
+
+<label>
+צבע הראש:
+<input type="color" id="headColor" value="#ffff00">
+</label>
+<br>
+
+<label class="switch-label">
+  מצב אוטומטי
+  <span class="switch"><input type="checkbox" id="autoToggle" checked><span class="slider"></span></span>
+</label>
+
+<label class="switch-label">
+  פחות פסילות
+  <span class="switch"><input type="checkbox" id="noFail"><span class="slider"></span></span>
+</label>
+
+<label class="switch-label">
+  חיזוי עתידי
+  <span class="switch"><input type="checkbox" id="futurePath"><span class="slider"></span></span>
+</label>
+
+<label class="switch-label">
+  הראה את הנתיב
+  <span class="switch"><input type="checkbox" id="showMemory"><span class="slider"></span></span>
+</label>
+
+<label class="switch-label">
+  עם אלכסון
+  <span class="switch"><input type="checkbox" id="diagonalMode"><span class="slider"></span></span>
+</label>
+
+<div class="mode-selector">
+<button type="button" class="mode-selector-btn active" data-mode="2d" onclick="setGameMode('2d')">📐 דו מימדי</button>
+<button type="button" class="mode-selector-btn" data-mode="3d" onclick="setGameMode('3d')">🎮 תלת מימדי</button>
+<button type="button" class="mode-selector-btn" data-mode="4d" onclick="setGameMode('4d')">🔷 ארבע מימדי</button>
+</div>
+
+<button type="button" class="btn-interactive-3d" id="btnInteractive3d" onclick="toggleInteractive3d()" style="display:none;">🎯 מצב תלת מימדי אינטראקטיבי</button>
+
+<button type="button" class="btn-3d-mode" id="btnManualStepToggle" onclick="toggleManualStepMode()" style="display:none;">👆 התקדמות ידנית</button>
+
+<button type="button" class="btn-3d-mode" id="btnLayoutManager" onclick="openLayoutManager()" style="display:none;">⚙️ סידור לוחות</button>
+
+<button type="button" onclick="toggleDebugDetails()" id="btnToggleDebugDetails">הסתר פרטים</button>
+
+<div id="debugInfo" style="margin-top:10px;font-size:14px;color:#aaa;"></div>
+
+<div id="debugDetails">
+  <div class="debug-grid" id="debugGrid"></div>
+</div>
+
+<label style="display:block;margin:16px 0 6px;">
+  מצב בינה (אוטומטי):
+  <select id="aiMode" style="max-width:100%;margin-top:4px;">
+    <option value="basic">AI בסיסי</option>
+    <option value="algo1">א׳ — קצר ובטוח (בונוס לפני תפוח)</option>
+    <option value="algo2">ב׳ — הישרדות וזיג-זג</option>
+    <option value="algo3" selected>ג׳ — פשוט ויעיל (ברירת מחדל)</option>
+  </select>
+</label>
+
+<div id="smartAILabel" style="color:#4CAF50;font-weight:bold;font-size:13px;margin:4px 0 8px;"></div>
+
+<div class="version-folder-strip" id="versionFolderStrip">
+  <div class="version-folder-bar" id="versionFolderBar">
+    <span class="vfb-title" id="versionFolderTitleStrip"><span aria-hidden="true">📁</span> גרסאות קודמות</span>
+    <span class="version-folder-badge" id="versionCountBadge">0</span>
+    <button type="button" class="version-menu-dots" id="versionFolderMenuBtn" aria-expanded="false" aria-controls="versionFolderPanel" title="גרסאות, צילומים ויומן שינויים" aria-label="פתח גרסאות ויומן שינויים">
+      <span class="vdot" aria-hidden="true"></span>
+      <span class="vdot" aria-hidden="true"></span>
+      <span class="vdot" aria-hidden="true"></span>
+    </button>
+  </div>
+  <div class="version-folder-panel" id="versionFolderPanel" hidden>
+    <div class="version-section-label">יומן עדכוני קוד (בקובץ)</div>
+    <p class="version-hint" style="margin-top:0">רשומות שמוזנות בקוד עם כל עריכה של המשחק (כולל שינויים קטנים).</p>
+    <ul id="embeddedChangelogList" class="version-changelog-list" aria-label="יומן קוד"></ul>
+    <div class="version-section-label">יומן שינויים (מכשיר)</div>
+    <p class="version-hint" style="margin-top:0">נרשם אוטומטית בעת שינוי הגדרות או פעולות במשחק.</p>
+    <ul id="runtimeChangelogList" class="version-changelog-list" aria-label="יומן מכשיר"></ul>
+    <button type="button" id="btnClearRuntimeChangelog" class="btn-mini-clear">נקה יומן מכשיר</button>
+    <div class="version-mini" style="margin-top:14px">גרסת קוד בדף: <span id="runningVersionLabel"></span> · צילום הבא: <span id="nextSnapshotVersionLabel"></span></div>
+    <div class="version-panel-actions">
+      <button type="button" id="btnSaveSnapshot">שמור בדפדפן (+0.01) + הורדת קובץ</button>
+      <button type="button" id="btnSaveSnapshotToFile">ייצא קובץ בלבד…</button>
+      <button type="button" id="btnRefreshFolderVersions">רענן מתיקיית versions</button>
+      <button type="button" id="btnExportLogsMenu">📥 ייצא לוג</button>
+      <button type="button" id="btnToggleLoopAlertMenu">🔔 התראת לולאה</button>
+    </div>
+    <p class="version-hint">קבצי HTML ב־<code>versions/</code> לצד המשחק. רשימת הקבצים ב־<code>manifest.json</code>. לטעינה מהתיקייה מומלץ שרת מקומי.</p>
+    <div class="version-section-label">שמורים בדפדפן</div>
+    <ul id="versionSnapshotsListLocal" class="version-snapshots-list" aria-label="גרסאות בדפדפן"></ul>
+    <div class="version-section-label">מתיקיית versions (מה־manifest)</div>
+    <ul id="versionSnapshotsListFolder" class="version-snapshots-list" aria-label="גרסאות בתיקייה"></ul>
+    <button type="button" id="btnClearSnapshots" class="version-clear-btn">מחק צילומים מהדפדפן בלבד</button>
+  </div>
+</div>
+
+</div>
+</div>
+
+<div class="personal-notes" style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border-color);">
+<button type="button" class="notes-toggle-btn" onclick="toggleNotes()" style="width:100%;background:linear-gradient(135deg, var(--bg-hover), var(--bg-card));color:var(--text-primary);border:1px solid var(--border-color);padding:12px;border-radius:var(--radius-md);cursor:pointer;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s ease;">
+<span id="notesToggleIcon">📝</span>
+<span id="notesToggleText">הערות אישיות</span>
+</button>
+<div id="notesPanel" style="display:none;margin-top:12px;">
+<textarea id="personalNotes" placeholder="כתוב כאן הערות, טיפים, אסטרטגיות, או כל דבר שתרצה לשמור..." style="width:100%;min-height:150px;padding:12px;background:var(--bg-card);border:1px solid var(--border-color);border-radius:var(--radius-md);color:var(--text-primary);font-size:13px;font-family:inherit;resize:vertical;outline:none;transition:border-color 0.2s ease;" oninput="saveNotes()"></textarea>
+<div id="notesStatus" style="text-align:center;color:var(--accent-success);font-size:11px;margin-top:8px;opacity:0;transition:opacity 0.3s ease;">✓ נשמר בהצלחה</div>
+</div>
+</div>
+
+</div>
+</aside>
+
+<main class="game-area">
+<h1>🐍 סנייק חכם במיוחד</h1>
+<div>ניקוד: <span id="score">0</span></div>
+
+<div id="gameContainer2d">
+<canvas id="game"></canvas>
+</div>
+
+<div id="gameContainer3d" class="game-container-3d" style="display:none;">
+<div class="view-panel-3d" data-view="iso">
+<h4>🔶 איזומטרי (מבט כללי)</h4>
+<canvas id="canvas3dIso"></canvas>
+</div>
+<div class="view-panel-3d" data-view="follower3d">
+<h4>🎯 מעקב תלת מימדי (ראש במרכז)</h4>
+<canvas id="canvas3dFollower3d"></canvas>
+</div>
+<div class="view-panel-3d" data-view="xy">
+<h4>📐 מישור XY</h4>
+<canvas id="canvas3dXY"></canvas>
+</div>
+<div class="view-panel-3d" data-view="xz">
+<h4>📐 מישור XZ</h4>
+<canvas id="canvas3dXZ"></canvas>
+</div>
+<div class="view-panel-3d" data-view="yz">
+<h4>📐 מישור YZ</h4>
+<canvas id="canvas3dYZ"></canvas>
+</div>
+</div>
+
+<div id="interactive3dContainer" class="interactive-3d-container" style="display:none;">
+<div id="interactive3dCanvas"></div>
+<div class="interactive-3d-hint">🖱️ גרור לסובב את התצוגה</div>
+</div>
+
+<div id="gameContainer4d" class="game-container-4d" style="display:none;">
+<div class="view-panel-4d" data-view="hypercube">
+<h4>🔷 היפרקוב 4D (מבט מרחוק)</h4>
+<canvas id="canvasHypercube"></canvas>
+</div>
+<div class="view-panel-4d" data-view="w0">
+<h4>📊 חתך W=0</h4>
+<canvas id="canvasW0"></canvas>
+</div>
+<div class="view-panel-4d" data-view="w1">
+<h4>📊 חתך W=1</h4>
+<canvas id="canvasW1"></canvas>
+</div>
+<div class="view-panel-4d" data-view="w2">
+<h4>📊 חתך W=2</h4>
+<canvas id="canvasW2"></canvas>
+</div>
+<div class="view-panel-4d" data-view="w3">
+<h4>📊 חתך W=3</h4>
+<canvas id="canvasW3"></canvas>
+</div>
+<div class="view-panel-4d" data-view="xy">
+<h4>📐 מישור XY</h4>
+<canvas id="canvasXY"></canvas>
+</div>
+<div class="view-panel-4d" data-view="zw">
+<h4>📐 מישור ZW</h4>
+<canvas id="canvasZW"></canvas>
+</div>
+<div class="view-panel-4d" data-view="xz">
+<h4>📐 מישור XZ</h4>
+<canvas id="canvasXZ"></canvas>
+</div>
+<div class="view-panel-4d" data-view="yw">
+<h4>📐 מישור YW</h4>
+<canvas id="canvasYW"></canvas>
+</div>
+<div class="view-panel-4d" data-view="follower">
+<h4>👁️ מעקב אחרי ראש (תמיד נראה)</h4>
+<canvas id="canvasFollower4d"></canvas>
+</div>
+<div class="view-panel-4d" data-view="follower4d">
+<h4>🔷 מעקב 4D קרוב (ראש במרכז)</h4>
+<canvas id="canvasFollower4dClose"></canvas>
+</div>
+<div class="view-panel-4d" data-view="follower2">
+<h4>👁️ מעקב מזווית אחרת</h4>
+<canvas id="canvasFollower4d2"></canvas>
+</div>
+<div class="view-panel-4d" data-view="cube0">
+<h4>🎲 קוביה W=0</h4>
+<canvas id="canvasCube0"></canvas>
+</div>
+<div class="view-panel-4d" data-view="cube1">
+<h4>🎲 קוביה W=1</h4>
+<canvas id="canvasCube1"></canvas>
+</div>
+<div class="view-panel-4d" data-view="cube2">
+<h4>🎲 קוביה W=2</h4>
+<canvas id="canvasCube2"></canvas>
+</div>
+<div class="view-panel-4d" data-view="cube3">
+<h4>🎲 קוביה W=3</h4>
+<canvas id="canvasCube3"></canvas>
+</div>
+<div class="view-panel-4d" data-view="cube4">
+<h4>🎲 קוביה W=4</h4>
+<canvas id="canvasCube4"></canvas>
+</div>
+<div class="view-panel-4d" data-view="cube5">
+<h4>🎲 קוביה W=5</h4>
+<canvas id="canvasCube5"></canvas>
+</div>
+<div class="view-panel-4d" data-view="cube6">
+<h4>🎲 קוביה W=6</h4>
+<canvas id="canvasCube6"></canvas>
+</div>
+<div class="view-panel-4d" data-view="cube7">
+<h4>🎲 קוביה W=7</h4>
+<canvas id="canvasCube7"></canvas>
+</div>
+</div>
+
+<div id="leaderboardPopup" class="leaderboard-popup">
+<button type="button" onclick="toggleLeaderboard()" style="position:absolute;top:8px;left:8px;background:var(--bg-hover);border:1px solid var(--border-color);color:var(--text-primary);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;" title="סגור">✕</button>
+<h3>🏆 שיאים מובילים</h3>
+<div class="leaderboard-section">
+<h4>📐 דו מימדי - אוטומטי</h4>
+<ul class="leaderboard-list" id="lb2dAuto"></ul>
+</div>
+<div class="leaderboard-section">
+<h4>📐 דו מימדי - ידני</h4>
+<ul class="leaderboard-list" id="lb2dManual"></ul>
+</div>
+<div class="leaderboard-section">
+<h4>🎮 תלת מימדי - אוטומטי</h4>
+<ul class="leaderboard-list" id="lb3dAuto"></ul>
+</div>
+<div class="leaderboard-section">
+<h4>🎮 תלת מימדי - ידני</h4>
+<ul class="leaderboard-list" id="lb3dManual"></ul>
+</div>
+<div class="leaderboard-section">
+<h4>🔷 ארבע מימדי - אוטומטי</h4>
+<ul class="leaderboard-list" id="lb4dAuto"></ul>
+</div>
+<div class="leaderboard-section">
+<h4>🔷 ארבע מימדי - ידני</h4>
+<ul class="leaderboard-list" id="lb4dManual"></ul>
+</div>
+</div>
+
+</main>
+
+</div>
+
+<div id="overlay">
+<h2 id="message"></h2>
+<div id="finalScore"></div>
+<button class="bigBtn" onclick="startGame()">התחל מחדש</button>
+<button id="btnViewReplay" class="bigBtn" onclick="startReplay()" style="background:linear-gradient(135deg, #3b82f6, #8b5cf6);margin-top:10px;display:none;">👁️ צפה במהלכים אחרונים</button>
+</div>
+
+<div id="replayOverlay" style="position:fixed;top:0;right:-320px;width:320px;height:100%;background:var(--bg-secondary);border-left:2px solid var(--border-color);display:none;flex-direction:column;padding:20px;box-sizing:border-box;box-shadow:-10px 0 30px rgba(0,0,0,0.5);z-index:200;transition:right 0.3s ease;">
+<div style="text-align:center;margin-bottom:20px;">
+<h2 style="color:var(--accent-primary);margin:0 0 10px;font-size:18px;">🔍 צפייה חוזרת</h2>
+<div style="color:var(--text-secondary);font-size:13px;">מהלך <span id="replayStepNum" style="color:var(--accent-warning);font-weight:700;">0</span> מתוך <span id="replayTotalSteps" style="color:var(--accent-warning);font-weight:700;">0</span></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+<button onclick="replayFirstStep()" style="background:var(--bg-hover);color:var(--text-primary);border:1px solid var(--border-color);padding:10px;border-radius:8px;cursor:pointer;font-size:14px;" title="להתחלה">⏮️ התחלה</button>
+<button onclick="replayPrevStep()" style="background:var(--bg-hover);color:var(--text-primary);border:1px solid var(--border-color);padding:10px;border-radius:8px;cursor:pointer;font-size:14px;" title="אחורה">◀️ אחורה</button>
+<button onclick="replayNextStep()" style="background:var(--bg-hover);color:var(--text-primary);border:1px solid var(--border-color);padding:10px;border-radius:8px;cursor:pointer;font-size:14px;" title="קדימה">▶️ קדימה</button>
+<button onclick="replayLastStep()" style="background:var(--bg-hover);color:var(--text-primary);border:1px solid var(--border-color);padding:10px;border-radius:8px;cursor:pointer;font-size:14px;" title="לסוף">⏭️ סוף</button>
+</div>
+<div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">
+<button onclick="closeReplay()" style="background:linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;">סגור צפייה</button>
+<button onclick="startGame()" style="background:linear-gradient(135deg, var(--accent-success), #059669);color:#fff;border:none;padding:12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;">🔄 התחל מחדש</button>
+</div>
+<div style="margin-top:16px;color:var(--text-secondary);font-size:11px;text-align:center;">חיצים ⏮️◀️▶️⏭️ לניווט | הנחש זז רק בלחיצות</div>
+</div>
+
+<button id="btnOpenReplay" onclick="openReplay()" style="position:fixed;top:20px;right:-60px;width:50px;height:50px;background:linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));color:#fff;border:none;border-radius:50%;cursor:pointer;font-size:24px;box-shadow:var(--shadow-md);z-index:150;display:none;transition:right 0.3s ease;" title="צפייה חוזרת">👁️</button>
+
+<div id="layoutManagerModal" class="layout-manager-modal">
+<div class="layout-manager-content">
+<h3>⚙️ סידור לוחות תצוגה</h3>
+<div id="layoutItemsList"></div>
+<div class="layout-manager-actions">
+<button type="button" onclick="saveLayoutManager()" style="background:#4CAF50;color:#fff;border:none;border-radius:6px;cursor:pointer;">שמור</button>
+<button type="button" onclick="closeLayoutManager()" style="background:#555;color:#fff;border:none;border-radius:6px;cursor:pointer;">ביטול</button>
+</div>
+</div>
+</div>
+
+<script>
+/** עדכן ידנית כשמפרסמים קובץ — מוצג בהגדרות (נפרד ממספור צילומי localStorage) */
+const GAME_SOURCE_VERSION = '1.35';
+
+/** יומן עדכונים מהקוד — מעדכנים בכל עריכה של הקובץ (שורות חדשות בראש המערך). */
+const EMBEDDED_MIN_CHANGELOG=[
+ {t:'2026-03-29T14:30:00.000Z',msg:'נוספה תיבת הערות אישיות בתחתית הסרגל הצדדי - נשמרת אוטומטית ב-localStorage ונשארת גם אחרי רענון',src:'קוד'},
+ {t:'2026-03-29T14:00:00.000Z',msg:'חיזוי עתידי כבוי כברירת מחדל',src:'קוד'},
+ {t:'2026-03-29T07:30:00.000Z',msg:'איזומטרי: פחות גבוה, קנבס מותאם לקווי המתאר, פרופורציות מאוזנות',src:'קוד'},
+ {t:'2026-03-29T04:30:00.000Z',msg:'פרטים מוצגים כברירת מחדל',src:'קוד'},
+ {t:'2026-03-29T04:00:00.000Z',msg:'כל הלוחות ב-3D ו-4D עם נחש דק רצוף בצבע תכלת (#00ffff)',src:'קוד'},
+ {t:'2026-03-29T03:30:00.000Z',msg:'רווח משהה תמיד, מתג התקדמות ידנית מופיע רק במצב ידני, נחש דק רצוף בצבע שונה בקוביות',src:'קוד'},
+ {t:'2026-03-29T03:00:00.000Z',msg:'3D מחדש: לוח איזומטרי גדול, 2 לוחות מעקב, 8 קוביות Z; כפתורי השהה/התחל מחוץ להגדרות; נחש דק רצוף בכל הלוחות',src:'קוד'},
+ {t:'2026-03-29T02:30:00.000Z',msg:'מצב התקדמות ידנית, מקלדת עברית/אנגלית, רווח להשהיה, Control/Option ל-Z ב-3D, Tab/§ ל-W ב-4D, 2 לוחות מעקב ב-4D, 8 קוביות W',src:'קוד'},
+ {t:'2026-03-29T01:30:00.000Z',msg:'פרטים מתעדכנים כל 0.1 שניות בכל מצבי המשחק, איפוס משחק מלא בהתחל מחדש, בונוס מעלה ניקוד בלבד (לא מגדיל נחש)',src:'קוד'},
+ {t:'2026-03-29T01:00:00.000Z',msg:'שיפורי 4D: היפרקוב כקוביות מחוברות, נחש דק רצוף בכל הלוחות, לוח מעקב תמיד מראה ראש+2 מקטעים, בהיר ליד קירים כהה רחוק',src:'קוד'},
+ {t:'2026-03-29T00:30:00.000Z',msg:'מצב ארבע מימדי (4D) עם היפרקוב, חתכי W, מישורי XY/ZW, ופרטים על מיקומים ואחוז מלא/ריק',src:'קוד'},
+ {t:'2026-03-29T00:00:00.000Z',msg:'לוח איזומטרי מרכזי גדול, נחש דק כקו 3D, מעקב תמיד אחרי הראש, כהה/סגול ליד קירות, זום/פאן באינטראקטיבי',src:'קוד'},
+ {t:'2026-03-28T23:30:00.000Z',msg:'מצב תלת מימדי אינטראקטיבי עם Three.js - גרירה עם העכבר לסיבוב התצוגה',src:'קוד'},
+ {t:'2026-03-28T23:00:00.000Z',msg:'מצב משחק תלת מימדי (3D) עם 8 תצוגות שונות, סידור לוחות גמיש, ו-AI תלת מימדי',src:'קוד'},
+ {t:'2026-03-28T22:30:00.000Z',msg:'תפריט ⋮ (שלוש נקודות) פותח גרסאות; שורת כותרת סטטית; יומן קוד מוטמע + יומן מכשיר אוטומטי.',src:'קוד'},
+ {t:'2026-03-28T20:00:00.000Z',msg:'תיקיית versions/, manifest; מהירות ברירת מחדל 20; כפתור השהה דינמי.',src:'קוד'}
+];
+
+const LS_VERSION_SNAPSHOTS = 'snake_game_version_snapshots';
+const LS_AUTO_CHANGELOG = 'snake_game_auto_changelog';
+const AUTO_LOG_MAX = 280;
+
+let folderManifestEntries=[];
+let lastAutoLogThrottle={};
+
+function formatVer(n){
+ return (Math.round(Number(n)*100)/100).toFixed(2);
+}
+
+function pushRuntimeChangelog(msg, throttleKey, minGapMs){
+ minGapMs=minGapMs===undefined?450:minGapMs;
+ let k=throttleKey!=null?String(throttleKey):String(msg);
+ let now=Date.now();
+ if(minGapMs>0 && lastAutoLogThrottle[k] && now-lastAutoLogThrottle[k]<minGapMs) return;
+ lastAutoLogThrottle[k]=now;
+ let arr=[];
+ try{ arr=JSON.parse(localStorage.getItem(LS_AUTO_CHANGELOG)||'[]'); }catch(e){ arr=[]; }
+ if(!Array.isArray(arr)) arr=[];
+ arr.unshift({t:new Date().toISOString(), msg:String(msg), src:'מכשיר'});
+ while(arr.length>AUTO_LOG_MAX) arr.pop();
+ localStorage.setItem(LS_AUTO_CHANGELOG, JSON.stringify(arr));
+ let panel=document.getElementById('versionFolderPanel');
+ if(panel && !panel.hidden) renderChangelogLists();
+}
+
+function renderChangelogLists(){
+ let embUl=document.getElementById('embeddedChangelogList');
+ let runUl=document.getElementById('runtimeChangelogList');
+ if(!embUl||!runUl) return;
+ embUl.innerHTML='';
+ let emb=[...EMBEDDED_MIN_CHANGELOG].sort((a,b)=>new Date(b.t)-new Date(a.t));
+ for(let e of emb){
+   let li=document.createElement('li');
+   let tspan=document.createElement('span');
+   tspan.className='vc-time';
+   tspan.textContent=new Date(e.t).toLocaleString('he-IL',{dateStyle:'short',timeStyle:'medium'});
+   let mspan=document.createElement('span');
+   mspan.textContent=e.msg;
+   li.appendChild(tspan);
+   li.appendChild(mspan);
+   if(e.src){
+     let s=document.createElement('span');
+     s.className='vc-src';
+     s.textContent=e.src;
+     li.appendChild(s);
+   }
+   embUl.appendChild(li);
+ }
+ if(emb.length===0){
+   let li=document.createElement('li');
+   li.style.color='#666';
+   li.style.border='none';
+   li.textContent='אין רשומות';
+   embUl.appendChild(li);
+ }
+
+ runUl.innerHTML='';
+ let rt=[];
+ try{ rt=JSON.parse(localStorage.getItem(LS_AUTO_CHANGELOG)||'[]'); }catch(e){ rt=[]; }
+ if(!Array.isArray(rt)) rt=[];
+ if(rt.length===0){
+   let li=document.createElement('li');
+   li.style.color='#666';
+   li.style.border='none';
+   li.textContent='אין רשומות עדיין';
+   runUl.appendChild(li);
+ }else{
+   for(let e of rt.slice(0,180)){
+     let li=document.createElement('li');
+     let tspan=document.createElement('span');
+     tspan.className='vc-time';
+     tspan.textContent=new Date(e.t).toLocaleString('he-IL',{dateStyle:'short',timeStyle:'medium'});
+     let mspan=document.createElement('span');
+     mspan.textContent=e.msg||'';
+     li.appendChild(tspan);
+     li.appendChild(mspan);
+     if(e.src){
+       let s=document.createElement('span');
+       s.className='vc-src';
+       s.textContent=e.src;
+       li.appendChild(s);
+     }
+     runUl.appendChild(li);
+   }
+ }
+}
+
+function downloadSnapshotFile(html, ver){
+ let name='snake-v'+formatVer(ver)+'.html';
+ let blob=new Blob([html],{type:'text/html;charset=utf-8'});
+ let a=document.createElement('a');
+ a.href=URL.createObjectURL(blob);
+ a.download=name;
+ a.click();
+ URL.revokeObjectURL(a.href);
+}
+
+async function exportSnapshotFileOnly(){
+ let html=capturePageHtml();
+ let ver=nextSnapshotVersion();
+ let name='snake-v'+formatVer(ver)+'.html';
+ if(window.showSaveFilePicker){
+   try{
+     let h=await window.showSaveFilePicker({
+       suggestedName:name,
+       types:[{description:'HTML',accept:{'text/html':['.html']}}]
+     });
+     let w=await h.createWritable();
+     await w.write(html);
+     await w.close();
+     pushRuntimeChangelog('ייצוא קובץ '+name+' (שמירה נבחרה)','exportFile',0);
+     return;
+   }catch(e){
+     if(e.name==='AbortError') return;
+     console.warn(e);
+   }
+ }
+ downloadSnapshotFile(html, ver);
+ pushRuntimeChangelog('הורדת קובץ '+name+' (ייצא קובץ בלבד)','exportFile',0);
+}
+
+async function refreshFolderVersions(){
+ try{
+   let u=new URL('versions/manifest.json', window.location.href);
+   u.searchParams.set('t',String(Date.now()));
+   let r=await fetch(u);
+   if(!r.ok) throw new Error(String(r.status));
+   let j=await r.json();
+   folderManifestEntries=Array.isArray(j)?j:[];
+ }catch(e){
+   folderManifestEntries=[];
+ }
+ renderVersionSnapshotsUI();
+}
+
+async function loadVersionFromFolder(file){
+ if(!file) return;
+ if(!confirm('לטעון את הקובץ '+file+' מתיקיית versions?')) return;
+ let u=new URL('versions/'+encodeURIComponent(file), window.location.href);
+ try{
+   let r=await fetch(u);
+   if(!r.ok){ alert('הקובץ לא נמצא או השרת חוסם (HTTP '+r.status+').'); return; }
+   let html=await r.text();
+   document.open('text/html','replace');
+   document.write(html);
+   document.close();
+ }catch(e){
+   alert('טעינה נכשלה. עם קובץ file:// נסה שרת מקומי בתיקיית המשחק:\npython3 -m http.server\n\n'+e);
+ }
+}
+
+function getVersionSnapshots(){
+ try{
+   let raw=localStorage.getItem(LS_VERSION_SNAPSHOTS);
+   if(!raw) return [];
+   let a=JSON.parse(raw);
+   return Array.isArray(a)?a:[];
+ }catch(e){ return []; }
+}
+
+function setVersionSnapshots(arr){
+ localStorage.setItem(LS_VERSION_SNAPSHOTS, JSON.stringify(arr));
+}
+
+function nextSnapshotVersion(){
+ let s=getVersionSnapshots();
+ if(!s.length) return 1;
+ let max=0;
+ for(let x of s){
+   let v=Number(x.ver);
+   if(!isNaN(v) && v>max) max=v;
+ }
+ return Math.round((max+0.01)*100)/100;
+}
+
+function capturePageHtml(){
+ return '<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+}
+
+function renderVersionSnapshotsUI(){
+ let listLocal=document.getElementById('versionSnapshotsListLocal');
+ let listFolder=document.getElementById('versionSnapshotsListFolder');
+ let nextEl=document.getElementById('nextSnapshotVersionLabel');
+ let runEl=document.getElementById('runningVersionLabel');
+ let badge=document.getElementById('versionCountBadge');
+ if(!listLocal||!listFolder) return;
+ runEl.textContent=GAME_SOURCE_VERSION;
+ nextEl.textContent=formatVer(nextSnapshotVersion());
+ let localItems=[...getVersionSnapshots()].sort((a,b)=>Number(b.ver)-Number(a.ver));
+ let folderItems=[...folderManifestEntries].sort((a,b)=>Number(b.ver||0)-Number(a.ver||0));
+ if(badge) badge.textContent=String(localItems.length+folderItems.length);
+
+ listLocal.innerHTML='';
+ for(let it of localItems){
+   let li=document.createElement('li');
+   let vlab=formatVer(it.ver);
+   let t=it.savedAt?new Date(it.savedAt).toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'}):'';
+   li.innerHTML='<span><span class="ver-name">'+vlab+'</span> <span style="color:#888;font-size:11px">'+t+'</span></span>';
+   let act=document.createElement('span');
+   act.className='ver-actions';
+   let bLoad=document.createElement('button');
+   bLoad.type='button';
+   bLoad.textContent='טען';
+   bLoad.addEventListener('click',()=>loadVersionSnapshot(it.ver));
+   let bDel=document.createElement('button');
+   bDel.type='button';
+   bDel.textContent='מחק';
+   bDel.addEventListener('click',()=>{
+     setVersionSnapshots(getVersionSnapshots().filter(x=>x.ver!==it.ver));
+     renderVersionSnapshotsUI();
+   });
+   act.appendChild(bLoad);
+   act.appendChild(bDel);
+   li.appendChild(act);
+   listLocal.appendChild(li);
+ }
+ if(localItems.length===0){
+   let li=document.createElement('li');
+   li.style.color='#666';
+   li.style.fontSize='12px';
+   li.style.border='none';
+   li.textContent='אין עדיין';
+   listLocal.appendChild(li);
+ }
+
+ listFolder.innerHTML='';
+ for(let it of folderItems){
+   let fn=it.file||it.filename||'';
+   if(!fn) continue;
+   let li=document.createElement('li');
+   let vlab=it.ver!=null?formatVer(it.ver):fn;
+   let t=it.savedAt?new Date(it.savedAt).toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'}):'';
+   li.innerHTML='<span><span class="ver-name">'+vlab+'</span> <span style="color:#aaa;font-size:11px">'+fn+'</span> '+ (t?'<span style="color:#888;font-size:11px">'+
+    t+'</span>':'') +'</span>';
+   let act=document.createElement('span');
+   act.className='ver-actions';
+   let bLoad=document.createElement('button');
+   bLoad.type='button';
+   bLoad.textContent='טען';
+   bLoad.addEventListener('click',()=>loadVersionFromFolder(fn));
+   act.appendChild(bLoad);
+   li.appendChild(act);
+   listFolder.appendChild(li);
+ }
+ if(folderItems.length===0){
+   let li=document.createElement('li');
+   li.style.color='#666';
+   li.style.fontSize='12px';
+   li.style.border='none';
+   li.textContent='לחץ ״רענן מתיקיית versions״ (דורש manifest.json וקבצים בתיקייה)';
+   listFolder.appendChild(li);
+ }
+ renderChangelogLists();
+}
+
+function saveCurrentSnapshot(){
+ let ver=nextSnapshotVersion();
+ let html=capturePageHtml();
+ let arr=getVersionSnapshots();
+ arr.push({ver, html, savedAt:new Date().toISOString()});
+ const maxBytes=4*1024*1024;
+ let tryStr=JSON.stringify(arr);
+ if(tryStr.length>maxBytes){
+   arr.shift();
+   if(arr.length===0){
+     alert('הקובץ גדול מדי לשמירה בדפדפן. נסה למחוק צילומים ישנים.');
+     return;
+   }
+   tryStr=JSON.stringify(arr);
+ }
+ while(tryStr.length>maxBytes && arr.length>1){
+   arr.shift();
+   tryStr=JSON.stringify(arr);
+ }
+ setVersionSnapshots(arr);
+ renderVersionSnapshotsUI();
+ downloadSnapshotFile(html, ver);
+ pushRuntimeChangelog('צילום גרסה '+formatVer(ver)+' — נשמר בדפדפן והורד קובץ HTML','snapshot',0);
+}
+
+function loadVersionSnapshot(ver){
+ let it=getVersionSnapshots().find(x=>x.ver===ver);
+ if(!it || !it.html){ alert('הגרסה לא נמצאה'); return; }
+ if(!confirm('לטעון גרסה '+formatVer(ver)+'? הדף הנוכחי יוחלף (מומלץ לשמור צילום של המצב הנוכחי קודם).')) return;
+ document.open('text/html','replace');
+ document.write(it.html);
+ document.close();
+}
+
+function clearAllSnapshots(){
+ if(!confirm('למחוק את כל צילומי הגרסאות השמורים במכשיר?')) return;
+ localStorage.removeItem(LS_VERSION_SNAPSHOTS);
+ renderVersionSnapshotsUI();
+ pushRuntimeChangelog('נמחקו כל צילומי הגרסאות מהדפדפן','clearSnaps',0);
+}
+
+let _startGameCallCount=0;
+
+let canvas = document.getElementById('game');
+let ctx = canvas.getContext('2d');
+
+let gridSize, cellSize;
+let snake, dir, apple, bonus;
+let score, interval, paused=false;
+
+let bonusValue=0, bonusTimer=0;
+let memory=new Set();
+let predictionPath=[];
+
+// Smart AI learning: track which moves led to death
+let dangerMap={};
+let moveHistory=[];
+
+// Debug logging for smart AI
+let debugLog=[];
+let positionHistory=[];
+let loopDetected=false;
+
+// Replay system
+let replayMode=false;
+let replayHistory=[];
+let replayIndex=0;
+let replaySnake=[];
+let replayApple={};
+let replayBonus=null;
+let replayScore=0;
+
+// Separate speed settings for each mode
+let speed2d=20;
+let speed3d=20;
+let speed4d=20;
+
+// 3D Mode variables
+let is3dMode=false;
+let snake3d=[];
+let dir3d={x:1,y:0,z:0};
+let apple3d={x:10,y:10,z:5};
+let bonus3d=null;
+let gridSize3d=15;
+let cellSize3d=20;
+let canvas3dCtxs={};
+let gameStates={
+  mode2d:null,
+  mode3d:null,
+  mode4d:null
+};
+
+let layoutConfig={
+ isometric:{order:0,visible:true},
+ front:{order:1,visible:true},
+ top:{order:2,visible:true},
+ bottom:{order:3,visible:true},
+ left:{order:4,visible:true},
+ right:{order:5,visible:true},
+ follower:{order:6,visible:true},
+ back:{order:7,visible:true},
+ main3d:{order:8,visible:false}
+};
+
+// Interactive 3D (Three.js) variables
+let isInteractive3d=false;
+let interactiveScene=null;
+let interactiveCamera=null;
+let interactiveRenderer=null;
+let interactiveControls=null;
+let snakeMeshes=[];
+let appleMesh=null;
+let bonusMesh=null;
+let cubeGroup=null;
+let isDragging=false;
+let previousMousePosition={x:0,y:0};
+let rotationSpeed=0.005;
+
+// 4D Mode variables
+let is4dMode=false;
+let snake4d=[];
+let dir4d={x:1,y:0,z:0,w:0};
+let apple4d={x:4,y:4,z:4,w:4};
+let bonus4d=null;
+let gridSize4d=8;
+let cellSize4d=15;
+let canvas4dCtxs={};
+
+function resizeCanvas(){
+ let gameArea=document.querySelector('.game-area');
+ let pad=28;
+ let availW=(gameArea?gameArea.clientWidth:window.innerWidth)-pad;
+ let top=gameArea?gameArea.getBoundingClientRect().top+16:100;
+ let availH=window.innerHeight-top-pad;
+ let max=Math.min(availW,availH);
+ if(max<40) max=40;
+ cellSize=Math.floor(max/gridSize);
+ if(cellSize<1) cellSize=1;
+ canvas.width=gridSize*cellSize;
+ canvas.height=gridSize*cellSize;
+}
+
+function startGame(){
+ _startGameCallCount++;
+ document.getElementById('overlay').style.display='none';
+ 
+ // Hide replay button
+ document.getElementById('btnOpenReplay').style.display='none';
+ document.getElementById('btnOpenReplay').style.right='-60px';
+ 
+ // Reset 2D state
+ memory.clear();
+ predictionPath=[];
+ moveHistory=[];
+ debugLog=[];
+ positionHistory=[];
+ loopDetected=false;
+ stuckCounter=0;
+ lastTargetDist=Infinity;
+ 
+ // Clear replay
+ replayHistory=[];
+ replayMode=false;
+ 
+ gridSize=parseInt(document.getElementById('size').value);
+ resizeCanvas();
+ 
+ snake=[];
+ for(let i=0;i<5;i++) snake.push({x:5-i,y:5});
+ 
+ dir={x:1,y:0};
+ score=0; updateScore();
+ 
+ spawnApple();
+ bonus=null;
+ bonusValue=0; bonusTimer=0;
+ 
+ paused=false;
+ updatePauseButtonLabel();
+ 
+ setSpeed();
+ 
+ // Reset 3D state
+ snake3d=[];
+ for(let i=0;i<5;i++) snake3d.push({x:5-i,y:5,z:5});
+ dir3d={x:1,y:0,z:0};
+ apple3d={x:10,y:10,z:5};
+ bonus3d=null;
+ 
+ // Reset 4D state
+ snake4d=[];
+ for(let i=0;i<4;i++) snake4d.push({x:4-i,y:4,z:4,w:4});
+ dir4d={x:1,y:0,z:0,w:0};
+ apple4d={x:4,y:4,z:4,w:4};
+ bonus4d=null;
+ 
+ if(_startGameCallCount>1) pushRuntimeChangelog('התחל מחדש / איפוס משחק','restart',280);
+}
+
+function setSpeed(){
+ clearInterval(interval);
+ let s=parseInt(document.getElementById('speedInput').value);
+ interval=setInterval(gameLoop,1000/s);
+ 
+ // Save current speed to current mode
+ if(is4dMode){
+   speed4d=s;
+ } else if(is3dMode){
+   speed3d=s;
+ } else {
+   speed2d=s;
+ }
+}
+
+document.getElementById('speedRange').oninput=e=>{
+ document.getElementById('speedInput').value=e.target.value;
+ setSpeed();
+ pushRuntimeChangelog('מהירות: '+e.target.value,'speed',480);
+};
+document.getElementById('speedInput').onchange=()=>{
+ setSpeed();
+ pushRuntimeChangelog('מהירות (מספר): '+document.getElementById('speedInput').value,'speed',0);
+};
+
+(function(){
+ let wrap=document.getElementById('controlsExtraWrap');
+ let btn=document.getElementById('toggleExtraControls');
+ btn.addEventListener('click',function(){
+   let c=wrap.classList.toggle('collapsed');
+   btn.setAttribute('aria-expanded', c?'false':'true');
+   pushRuntimeChangelog(c?'הסתרת לוח הגדרות מורחב':'הצגת לוח הגדרות מורחב','extraWrap',400);
+ });
+})();
+
+function updateAiModeLabel(){
+ let el=document.getElementById('smartAILabel');
+ let m=document.getElementById('aiMode').value;
+ let txt={
+   basic:'מצב: AI בסיסי',
+   algo1:'מצב: אלגוריתם 1 — נתיב קצר בטוח (תופס בונוס כתום קודם אם אפשר בלי להילכד)',
+   algo2:'מצב: אלגוריתם 2 — תכנון הישרדות, זיג-זג לצמצום הגוף'
+ };
+ el.textContent=txt[m]||'';
+}
+document.getElementById('aiMode').addEventListener('change', ()=>{
+ updateAiModeLabel();
+ pushRuntimeChangelog('מצב בינה: '+document.getElementById('aiMode').value,'aiMode',0);
+});
+updateAiModeLabel();
+
+document.getElementById('size').addEventListener('change',()=>pushRuntimeChangelog('גודל לוח: '+document.getElementById('size').value,'size',0));
+document.getElementById('snakeColor').addEventListener('change',()=>pushRuntimeChangelog('צבע נחש: '+document.getElementById('snakeColor').value,'snakeColor',0));
+document.getElementById('headColor').addEventListener('change',()=>pushRuntimeChangelog('צבע ראש: '+document.getElementById('headColor').value,'headColor',0));
+['noFail','futurePath','showMemory','diagonalMode'].forEach(id=>{
+ let el=document.getElementById(id);
+ if(!el) return;
+ el.addEventListener('change',()=>pushRuntimeChangelog((id==='noFail'?'פחות פסילות':id==='futurePath'?'חיזוי עתידי':id==='showMemory'?'הראה את הנתיב':'עם אלכסון')+': '+(el.checked?'מופעל':'כבוי'), id, 0));
+});
+
+// Auto toggle - also show/hide manual step button
+document.getElementById('autoToggle').addEventListener('change',()=>{
+ let autoChecked=document.getElementById('autoToggle').checked;
+ let manualBtn=document.getElementById('btnManualStepToggle');
+ if(is3dMode || is4dMode){
+   if(autoChecked){
+     manualBtn.style.display='none';
+     manualStepMode=false;
+   } else {
+     manualBtn.style.display='block';
+     manualStepMode=true;
+     manualBtn.textContent='👆 התקדמות ידנית (פעיל)';
+     manualBtn.classList.add('active');
+   }
+ }
+ pushRuntimeChangelog('מצב אוטומטי: '+(autoChecked?'מופעל':'כבוי'),'autoToggle',0);
+});
+
+document.getElementById('btnSaveSnapshot').addEventListener('click', saveCurrentSnapshot);
+document.getElementById('btnSaveSnapshotToFile').addEventListener('click', ()=>{ exportSnapshotFileOnly(); });
+document.getElementById('btnRefreshFolderVersions').addEventListener('click', ()=>{
+ refreshFolderVersions();
+ pushRuntimeChangelog('רענון רשימת גרסאות מתיקיית versions','refManifest',0);
+});
+document.getElementById('btnClearSnapshots').addEventListener('click', clearAllSnapshots);
+document.getElementById('btnClearRuntimeChangelog').addEventListener('click', ()=>{
+ if(!confirm('למחוק את יומן השינויים במכשיר (לא ישפיע על יומן הקוד)?')) return;
+ localStorage.removeItem(LS_AUTO_CHANGELOG);
+ lastAutoLogThrottle={};
+ renderChangelogLists();
+});
+document.getElementById('btnExportLogsMenu').addEventListener('click', exportLogs);
+document.getElementById('btnToggleLoopAlertMenu').addEventListener('click', toggleLoopAlert);
+
+(function(){
+ let strip=document.getElementById('versionFolderStrip');
+ let bar=document.getElementById('versionFolderBar');
+ let btn=document.getElementById('versionFolderMenuBtn');
+ let panel=document.getElementById('versionFolderPanel');
+ if(!btn||!panel) return;
+ 
+ function togglePanel(forceOpen){
+   let willOpen=forceOpen!==undefined?forceOpen:panel.hidden;
+   panel.hidden=!willOpen;
+   strip.classList.toggle('is-open',willOpen);
+   btn.setAttribute('aria-expanded',willOpen?'true':'false');
+   if(willOpen){
+     refreshFolderVersions();
+     renderChangelogLists();
+   }
+ }
+ 
+ btn.addEventListener('click',function(ev){
+   ev.stopPropagation();
+   togglePanel();
+ });
+ 
+ bar.addEventListener('click',function(ev){
+   ev.stopPropagation();
+   togglePanel();
+ });
+ 
+ document.addEventListener('click',function(){
+   if(!panel.hidden){
+     panel.hidden=true;
+     strip.classList.remove('is-open');
+     btn.setAttribute('aria-expanded','false');
+   }
+ });
+})();
+
+renderVersionSnapshotsUI();
+refreshFolderVersions();
+
+function spawnApple(){ apple=randomFree(); }
+function spawnBonus(){ bonus=randomFree(); bonusValue=18; bonusTimer=60; }
+
+function randomFree(){
+ let p;
+ do{
+   p={x:rand(),y:rand()};
+ } while(snake.some(s=>s.x===p.x && s.y===p.y) || (apple && p.x===apple.x && p.y===apple.y));
+ return p;
+}
+function rand(){ return Math.floor(Math.random()*gridSize); }
+
+function updateScore(){ document.getElementById('score').innerText=score; }
+
+function endGame(text){
+ // Learn from death - mark last positions as dangerous
+ if(moveHistory.length>0){
+   let lastMoves=moveHistory.slice(-5);
+   lastMoves.forEach((m,i)=>{
+     let key=m.x+','+m.y+'_'+m.dx+','+m.dy;
+     dangerMap[key]=(dangerMap[key]||0)+((5-i)*2);
+   });
+ }
+ 
+ // Save replay
+ replayHistory=[...moveHistory];
+ replayIndex=replayHistory.length-1;
+ replaySnake=[...snake];
+ replayApple={...apple};
+ replayBonus=bonus?{...bonus}:null;
+ replayScore=score;
+ 
+ clearInterval(interval);
+ 
+ // Show replay button
+ document.getElementById('btnOpenReplay').style.display='block';
+ document.getElementById('btnOpenReplay').style.right='10px';
+ 
+ document.getElementById('overlay').style.display='flex';
+ document.getElementById('message').innerText=text;
+ document.getElementById('finalScore').innerText='הניקוד שלך: '+score;
+ pushRuntimeChangelog('סיום סבב: '+text+' (ניקוד '+score+')','endGame',0);
+}
+
+function updatePauseButtonLabel(){
+ let b=document.getElementById('btnPause');
+ if(!b) return;
+ b.textContent=paused?'▶ המשך':'⏸ השהה';
+}
+
+function togglePause(){
+ paused=!paused;
+ updatePauseButtonLabel();
+ pushRuntimeChangelog(paused?'השהה':'המשך','pause',200);
+}
+
+function getDirs(){
+ let diagonal=document.getElementById('diagonalMode').checked;
+ let dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+ if(diagonal) dirs.push([1,1],[1,-1],[-1,1],[-1,-1]);
+ return dirs;
+}
+
+function getValidDirs(headX, headY, snakeBody){
+ let dirs=getDirs();
+ return dirs.filter(d=>{
+   let nx=headX+d[0], ny=headY+d[1];
+   return nx>=0 && ny>=0 && nx<gridSize && ny<gridSize && !snakeBody.some(s=>s.x===nx && s.y===ny);
+ });
+}
+
+function gameLoop(){
+ if(paused) return;
+
+ if(is4dMode){
+   gameLoop4d();
+   return;
+ }
+
+ if(is3dMode){
+   gameLoop3d();
+   return;
+ }
+
+ let isAuto=document.getElementById('autoToggle').checked;
+ let aiMode=document.getElementById('aiMode').value;
+ let lessFailMode=document.getElementById('noFail').checked;
+
+ // Manual step mode - only move when key is pressed
+ if(manualStepMode && pendingDir){
+   dir={...pendingDir};
+   pendingDir=null;
+   // Execute one step then stop
+ } else if(manualStepMode){
+   return; // Wait for key press
+ } else if(isAuto){
+   if(aiMode==='basic') dir=getAI();
+   else if(aiMode==='algo1') dir=algorithm1SafeShortestAI();
+   else if(aiMode==='algo2') dir=algorithm2SurvivalZigzagAI();
+   else if(aiMode==='algo3') dir=algorithm3SimpleSafe();
+   else dir=getAI();
+ }
+
+ let head={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
+
+ let fail=head.x<0||head.y<0||head.x>=gridSize||head.y>=gridSize||collision(head);
+
+ // פחות פסילות - auto-correct when about to fail (works in manual mode too)
+ if(fail && lessFailMode){
+   let valid=getValidDirs(snake[0].x, snake[0].y, snake);
+   if(valid.length>0){
+     let target=bonus?bonus:apple;
+     valid.sort((a,b)=>{
+       let ax=snake[0].x+a[0], ay=snake[0].y+a[1];
+       let bx=snake[0].x+b[0], by=snake[0].y+b[1];
+       if(bonus){
+         let la=ax===bonus.x&&ay===bonus.y?0:1;
+         let lb=bx===bonus.x&&by===bonus.y?0:1;
+         if(la!==lb) return la-lb;
+       }
+       let da=Math.abs(ax-target.x)+Math.abs(ay-target.y);
+       let db=Math.abs(bx-target.x)+Math.abs(by-target.y);
+       return da-db;
+     });
+     dir={x:valid[0][0],y:valid[0][1]};
+     head={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
+     fail=false;
+   }
+ }
+
+ if(fail){
+   endGame('נגמר המשחק');
+   return;
+ }
+
+ // Track move for learning
+ moveHistory.push({x:snake[0].x, y:snake[0].y, dx:dir.x, dy:dir.y});
+ if(moveHistory.length>200) moveHistory.shift();
+ 
+ // Save for replay
+ replayHistory.push({x:snake[0].x, y:snake[0].y, dx:dir.x, dy:dir.y});
+
+ // Track position for loop detection
+ let posKey=snake[0].x+','+snake[0].y;
+ positionHistory.push(posKey);
+ if(positionHistory.length>50) positionHistory.shift();
+ // Check for loop (same position repeated in cycle)
+ let recentPositions=positionHistory.slice(-20);
+ let posCounts={};
+ recentPositions.forEach(p=>posCounts[p]=(posCounts[p]||0)+1);
+ loopDetected=Object.values(posCounts).some(c=>c>=4);
+
+ snake.unshift(head);
+
+ if(head.x===apple.x && head.y===apple.y){
+   score++; updateScore();
+   spawnApple();
+   if(score%6===0) spawnBonus();
+   stuckCounter=0; // Reset stuck counter when eating apple
+   lastTargetDist=Infinity;
+ }
+ else if(bonus && head.x===bonus.x && head.y===bonus.y){
+   // Bonus: only increase score, don't grow snake
+   score+=bonusValue; updateScore();
+   bonus=null;
+   stuckCounter=0; // Reset stuck counter when eating bonus
+   lastTargetDist=Infinity;
+   snake.pop(); // Still pop to maintain length
+ }
+ else snake.pop();
+
+ if(bonus){
+   bonusTimer--;
+   if(bonusTimer%10===0){
+     bonusValue-=3;
+     if(bonusValue<=0) bonus=null;
+   }
+ }
+
+ if(snake.length>=gridSize*gridSize-2){
+   endGame('כל הכבוד!');
+   return;
+ }
+
+ memory.add(head.x+','+head.y);
+
+ // Compute prediction path
+ if(document.getElementById('futurePath').checked){
+   predictionPath=computePrediction();
+ } else {
+   predictionPath=[];
+ }
+
+ draw();
+ updateDebugInfo();
+}
+
+function collision(p){ return snake.some(s=>s.x===p.x && s.y===p.y); }
+
+// חיזוי עתידי - simulate future steps (בונוס כתום לפני תפוח)
+function computePrediction(){
+ let path=[];
+ let simSnake=snake.map(s=>({...s}));
+ let simApple={...apple};
+ let simBonus=bonus?{x:bonus.x,y:bonus.y}:null;
+ let simBv=bonusValue;
+ let steps=Math.min(15, gridSize);
+
+ for(let i=0;i<steps;i++){
+   let target=simBonus||simApple;
+   let dirs=getDirs();
+   let valid=dirs.filter(d=>{
+     let nx=simSnake[0].x+d[0], ny=simSnake[0].y+d[1];
+     return nx>=0 && ny>=0 && nx<gridSize && ny<gridSize && !simSnake.some(s=>s.x===nx && s.y===ny);
+   });
+   if(valid.length===0) break;
+
+   valid.sort((a,b)=>{
+     let ax=simSnake[0].x+a[0], ay=simSnake[0].y+a[1];
+     let bx=simSnake[0].x+b[0], by=simSnake[0].y+b[1];
+     if(simBonus){
+       let la=ax===simBonus.x&&ay===simBonus.y?0:1;
+       let lb=bx===simBonus.x&&by===simBonus.y?0:1;
+       if(la!==lb) return la-lb;
+     }
+     let da=Math.abs(ax-target.x)+Math.abs(ay-target.y);
+     let db=Math.abs(bx-target.x)+Math.abs(by-target.y);
+     return da-db;
+   });
+
+   let d0=valid[0];
+   let newHead={x:simSnake[0].x+d0[0], y:simSnake[0].y+d0[1]};
+   path.push(newHead);
+
+   simSnake.unshift(newHead);
+   if(simBonus && newHead.x===simBonus.x && newHead.y===simBonus.y){
+     for(let k=0;k<simBv;k++) simSnake.push({...simSnake[simSnake.length-1]});
+     simBonus=null;
+   } else if(newHead.x===simApple.x && newHead.y===simApple.y){
+   } else {
+     simSnake.pop();
+   }
+ }
+ return path;
+}
+
+function draw(){
+ ctx.fillStyle='#001f3f';
+ ctx.fillRect(0,0,canvas.width,canvas.height);
+
+ // Memory trail
+ if(document.getElementById('showMemory').checked){
+   ctx.fillStyle='rgba(255,255,255,0.1)';
+   memory.forEach(k=>{
+     let [x,y]=k.split(',').map(Number);
+     ctx.fillRect(x*cellSize,y*cellSize,cellSize,cellSize);
+   });
+ }
+
+ // Prediction path
+ if(predictionPath.length>0){
+   predictionPath.forEach((p,i)=>{
+     let alpha=0.5-i*0.03;
+     if(alpha<0.05) alpha=0.05;
+     ctx.fillStyle=`rgba(0,200,255,${alpha})`;
+     ctx.fillRect(p.x*cellSize+2,p.y*cellSize+2,cellSize-4,cellSize-4);
+   });
+ }
+
+ // Apple
+ ctx.fillStyle='red';
+ ctx.fillRect(apple.x*cellSize,apple.y*cellSize,cellSize,cellSize);
+
+ // Bonus
+ if(bonus){
+   ctx.fillStyle='orange';
+   ctx.fillRect(bonus.x*cellSize,bonus.y*cellSize,cellSize,cellSize);
+ }
+
+ // Snake
+ let snakeColor=document.getElementById('snakeColor').value;
+ let headColor=document.getElementById('headColor').value;
+
+ snake.forEach((s,i)=>{
+   ctx.fillStyle=i===0?headColor:snakeColor;
+   ctx.fillRect(s.x*cellSize,s.y*cellSize,cellSize-1,cellSize-1);
+ });
+}
+
+// AI בסיסי
+function getAI(){
+ let target=bonus?bonus:apple;
+ if(bonus){
+   let bon=directionWhenBonusMustEat();
+   if(bon) return bon;
+ }
+ let dirs=getDirs();
+ let valid=dirs.filter(d=>{
+   let nx=snake[0].x+d[0],ny=snake[0].y+d[1];
+   return nx>=0&&ny>=0&&nx<gridSize&&ny<gridSize&&!collision({x:nx,y:ny});
+ });
+ if(valid.length===0) return dir;
+ valid.sort((a,b)=>dist(a,target)-dist(b,target));
+ return {x:valid[0][0],y:valid[0][1]};
+}
+
+function dist(d,t){
+ let nx=snake[0].x+d[0],ny=snake[0].y+d[1];
+ return Math.abs(nx-t.x)+Math.abs(ny-t.y);
+}
+
+// ——— Snake AI: shortest path to food with full tail-safety along the path (industry-standard “safe shortest”) ———
+
+let stuckCounter=0;
+let lastTargetDist=Infinity;
+
+function gridKey(x,y){
+ return x+','+y;
+}
+
+function validMovesFromSnake(snk){
+ return getDirs().filter(d=>{
+   let nx=snk[0].x+d[0], ny=snk[0].y+d[1];
+   if(nx<0||ny<0||nx>=gridSize||ny>=gridSize) return false;
+   for(let i=1;i<snk.length;i++){
+     if(snk[i].x===nx && snk[i].y===ny) return false;
+   }
+   return true;
+ });
+}
+
+function foodPathBlocks(snk){
+ let blocked=new Set();
+ for(let i=1;i<snk.length-1;i++)
+   blocked.add(gridKey(snk[i].x,snk[i].y));
+ return blocked;
+}
+
+function bfsPathToGoal(sx,sy,gx,gy,blocked,dirs){
+ if(sx===gx && sy===gy) return [{x:sx,y:sy}];
+ let q=[{x:sx,y:sy,path:[{x:sx,y:sy}]}];
+ let vis=new Set([gridKey(sx,sy)]);
+ while(q.length){
+   let cur=q.shift();
+   for(let d of dirs){
+     let nx=cur.x+d[0], ny=cur.y+d[1];
+     if(nx<0||ny<0||nx>=gridSize||ny>=gridSize) continue;
+     let k=gridKey(nx,ny);
+     if(vis.has(k)||blocked.has(k)) continue;
+     let np=[...cur.path,{x:nx,y:ny}];
+     if(nx===gx && ny===gy) return np;
+     vis.add(k);
+     q.push({x:nx,y:ny,path:np});
+   }
+ }
+ return null;
+}
+
+function advanceSnakeFromStep(snk, nextHead){
+ let nx=nextHead.x, ny=nextHead.y;
+ let newSnake=snk.map(s=>({...s}));
+ newSnake.unshift({x:nx,y:ny});
+ let ateApple=apple && nx===apple.x && ny===apple.y;
+ let ateBonus=bonus && nx===bonus.x && ny===bonus.y;
+ if(ateBonus){
+   for(let i=0;i<bonusValue;i++) newSnake.push({...newSnake[newSnake.length-1]});
+ } else if(!ateApple){
+   newSnake.pop();
+ }
+ return newSnake;
+}
+
+function afterDirection(snk,d){
+ let nx=snk[0].x+d[0], ny=snk[0].y+d[1];
+ return advanceSnakeFromStep(snk,{x:nx,y:ny});
+}
+
+function tailReachable(snk){
+ if(snk.length<=1) return true;
+ let tail=snk[snk.length-1], head=snk[0];
+ if(head.x===tail.x && head.y===tail.y) return true;
+ let blocked=new Set();
+ for(let i=1;i<snk.length-1;i++)
+   blocked.add(gridKey(snk[i].x,snk[i].y));
+ return bfsPathToGoal(head.x,head.y,tail.x,tail.y,blocked,getDirs())!==null;
+}
+
+function isPathTailSafeFrom(snk, path){
+ let s=snk.map(seg=>({...seg}));
+ for(let i=1;i<path.length;i++){
+   s=advanceSnakeFromStep(s,path[i]);
+   if(!tailReachable(s)) return false;
+ }
+ return true;
+}
+
+function countReachableSpace(snk){
+ let dirs=getDirs();
+ let blocked=new Set();
+ for(let seg of snk) blocked.add(gridKey(seg.x,seg.y));
+ let start=snk[0];
+ let q=[{x:start.x,y:start.y}];
+ let vis=new Set([gridKey(start.x,start.y)]);
+ let cnt=0;
+ while(q.length){
+   let p=q.shift();
+   cnt++;
+   for(let d of dirs){
+     let nx=p.x+d[0], ny=p.y+d[1];
+     if(nx<0||ny<0||nx>=gridSize||ny>=gridSize) continue;
+     let k=gridKey(nx,ny);
+     if(vis.has(k)||blocked.has(k)) continue;
+     vis.add(k);
+     q.push({x:nx,y:ny});
+   }
+ }
+ return cnt;
+}
+
+function loopVisitPenalty(nx,ny){
+ let pk=gridKey(nx,ny), n=0;
+ for(let i=Math.max(0,positionHistory.length-32);i<positionHistory.length;i++){
+   if(positionHistory[i]===pk) n++;
+ }
+ return n*n*120;
+}
+
+/** צעד יחיד לתא הבונוס — רק אם אחרי אכילה הזנב עדיין נגיש (כללי הבסיס). */
+function tryBonusAdjacentCapture(){
+ if(!bonus) return null;
+ let moves=validMovesFromSnake(snake);
+ for(let d of moves){
+   let nx=snake[0].x+d[0], ny=snake[0].y+d[1];
+   if(nx!==bonus.x || ny!==bonus.y) continue;
+   let sim=afterDirection(snake,d);
+   if(tailReachable(sim)) return {x:d[0],y:d[1]};
+ }
+ return null;
+}
+
+/**
+ * מסלול BFS לבונוס כשאין מסלול "מוגן" שבודק tail בכל צעד בדרך.
+ * דורש: אחרי הצעד הראשון tailReachable, ואחרי סימולציה מלאה עד הבונוס — שוב tailReachable.
+ */
+function tryLooseSafeBonusPathFirstStep(){
+ if(!bonus) return null;
+ let moves=validMovesFromSnake(snake);
+ let dirs=getDirs();
+ for(let d of moves){
+   let sim=afterDirection(snake,d);
+   if(!tailReachable(sim)) continue;
+   let blocked=foodPathBlocks(sim);
+   let path=bfsPathToGoal(sim[0].x,sim[0].y,bonus.x,bonus.y,blocked,dirs);
+   if(!path) continue;
+   let s=sim.map(seg=>({...seg}));
+   for(let i=1;i<path.length;i++)
+    s=advanceSnakeFromStep(s,path[i]);
+   if(tailReachable(s)) return {x:d[0],y:d[1]};
+ }
+ return null;
+}
+
+/** נחיתה חוקית על הבונוס גם בלי בדיקת tailReachable (אכילה בכל האפשרויות שאינן התנגשות מיידית). */
+function tryBonusAdjacentAnyLegal(){
+ if(!bonus) return null;
+ for(let d of validMovesFromSnake(snake)){
+   let nx=snake[0].x+d[0], ny=snake[0].y+d[1];
+   if(nx===bonus.x && ny===bonus.y) return {x:d[0],y:d[1]};
+ }
+ return null;
+}
+
+/** מסלול BFS לבונוס ללא בדיקות זנב — צעד ראשון עם מסלול קצר ככל האפשר. */
+function tryDesperateBonusPathFirstStep(){
+ if(!bonus) return null;
+ let moves=validMovesFromSnake(snake);
+ let dirs=getDirs();
+ let best=null, bestLen=Infinity;
+ for(let d of moves){
+   let sim=afterDirection(snake,d);
+   let blocked=foodPathBlocks(sim);
+   let path=bfsPathToGoal(sim[0].x,sim[0].y,bonus.x,bonus.y,blocked,dirs);
+   if(!path) continue;
+   if(path.length<bestLen){
+     bestLen=path.length;
+     best=d;
+   }
+ }
+ return best?{x:best[0],y:best[1]}:null;
+}
+
+/** כל המהלכים הלגיטימיים שנשארים בטוחים לאורך מסלול BFS למזון (בונוס כתום או תפוח אדום). */
+function findSafeFoodMoves(target){
+ let moves=validMovesFromSnake(snake);
+ if(!moves.length) return [];
+ moves.sort((va,vb)=>{
+   let ax=snake[0].x+va[0], ay=snake[0].y+va[1];
+   let bx=snake[0].x+vb[0], by=snake[0].y+vb[1];
+   return (Math.abs(ax-target.x)+Math.abs(ay-target.y))-(Math.abs(bx-target.x)+Math.abs(by-target.y));
+ });
+ let dirs=getDirs();
+ let out=[];
+ for(let d of moves){
+   let sim=afterDirection(snake,d);
+   if(!tailReachable(sim)) continue;
+   let blocked=foodPathBlocks(sim);
+   let path=bfsPathToGoal(sim[0].x,sim[0].y,target.x,target.y,blocked,dirs);
+   if(!path) continue;
+   if(!isPathTailSafeFrom(sim,path)) continue;
+   out.push({d,pathLen:path.length});
+ }
+ return out;
+}
+
+/** אלגוריתם 1: אורך מסלול מינימלי מתוך המסלולים הבטוחים; שבירת שיוויון — יותר מרחב נגיש, פחות לולאות. */
+function findShortestSafeFoodMove(target){
+ let c=findSafeFoodMoves(target);
+ if(!c.length) return null;
+ let bestLen=Math.min(...c.map(x=>x.pathLen));
+ let tie=c.filter(x=>x.pathLen===bestLen);
+ tie.sort((a,b)=>{
+   let simA=afterDirection(snake,a.d), simB=afterDirection(snake,b.d);
+   let sA=countReachableSpace(simA), sB=countReachableSpace(simB);
+   if(sB!==sA) return sB-sA;
+   let nxA=snake[0].x+a.d[0], nyA=snake[0].y+a.d[1];
+   let nxB=snake[0].x+b.d[0], nyB=snake[0].y+b.d[1];
+   return loopVisitPenalty(nxA,nyA)-loopVisitPenalty(nxB,nyB);
+ });
+ let pick=tie[0];
+ return {x:pick.d[0],y:pick.d[1],pathLen:bestLen};
+}
+
+/**
+ * מדיניות אחידה בכל אלגוריתמי ה-AI: כשיש בונוס כתום — עדיפות מקסימלית לאכילה.
+ * סדר: בטוח צמוד → מסלול בטוח קצר → מסלול "רופף" בטוח → נחיתה חוקית כלשהי על הבונוס → BFS ללא בדיקת זנב.
+ */
+function directionWhenBonusMustEat(){
+ if(!bonus) return null;
+ let r=tryBonusAdjacentCapture();
+ if(r) return r;
+ let m=findShortestSafeFoodMove(bonus);
+ if(m) return {x:m.x,y:m.y};
+ r=tryLooseSafeBonusPathFirstStep();
+ if(r) return r;
+ r=tryBonusAdjacentAnyLegal();
+ if(r) return r;
+ return tryDesperateBonusPathFirstStep();
+}
+
+function snakeBoundingCellCount(snk){
+ let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+ for(let s of snk){
+   minX=Math.min(minX,s.x); maxX=Math.max(maxX,s.x);
+   minY=Math.min(minY,s.y); maxY=Math.max(maxY,s.y);
+ }
+ return (maxX-minX+1)*(maxY-minY+1);
+}
+
+function algorithm1SafeShortestAI(){
+ let target=bonus?bonus:apple;
+ let curd=Math.abs(snake[0].x-target.x)+Math.abs(snake[0].y-target.y);
+ if(curd>=lastTargetDist) stuckCounter++; else stuckCounter=0;
+ lastTargetDist=curd;
+
+ if(bonus) return bestSurvivalMove(bonus);
+
+ let m=findShortestSafeFoodMove(apple);
+ if(m){
+   logAIDecision({x:m.x,y:m.y},'algo1safeShortest',m.pathLen,true);
+   return {x:m.x,y:m.y};
+ }
+ return bestSurvivalMove(apple);
+}
+
+function algorithm2SurvivalZigzagAI(){
+ let target=bonus?bonus:apple;
+ let curd=Math.abs(snake[0].x-target.x)+Math.abs(snake[0].y-target.y);
+ if(curd>=lastTargetDist) stuckCounter++; else stuckCounter=0;
+ lastTargetDist=curd;
+
+ if(bonus) return bestSurvivalMove(bonus);
+
+ let cand=findSafeFoodMoves(apple);
+ if(!cand.length) return bestSurvivalMove(apple);
+
+ let prevX=dir.x, prevY=dir.y;
+ let scored=cand.map(c=>{
+   let nx=snake[0].x+c.d[0], ny=snake[0].y+c.d[1];
+   let sim=afterDirection(snake,c.d);
+   let space=countReachableSpace(sim);
+   let bbox=snakeBoundingCellCount(sim);
+   let lp=loopVisitPenalty(nx,ny);
+   let dk=snake[0].x+','+snake[0].y+'_'+c.d[0]+','+c.d[1];
+   let danger=dangerMap[dk]||0;
+   let sameDir=(c.d[0]===prevX && c.d[1]===prevY);
+   let zigBonus=sameDir ? 0 : 100;
+   let pathWeight=7;
+   let score=space*12+zigBonus-c.pathLen*pathWeight-lp*0.75-danger-bbox*0.4;
+   return {c,score,pathLen:c.pathLen};
+ });
+
+ scored.sort((a,b)=>b.score-a.score);
+ let best=scored[0];
+ logAIDecision({x:best.c.d[0],y:best.c.d[1]},'algo2zigzagSurvival',best.pathLen,true);
+ return {x:best.c.d[0],y:best.c.d[1]};
+}
+
+function bestSurvivalMove(target){
+ let moves=validMovesFromSnake(snake);
+ if(!moves.length) return dir;
+ if(bonus){
+   let bon=directionWhenBonusMustEat();
+   if(bon){
+     logAIDecision(bon,'survivalBonusMandatory',0,true);
+     return bon;
+   }
+ }
+ let rows=moves.map(d=>{
+   let sim=afterDirection(snake,d);
+   let space=countReachableSpace(sim);
+   let tr=tailReachable(sim);
+   let nx=snake[0].x+d[0], ny=snake[0].y+d[1];
+   let md=Math.abs(nx-target.x)+Math.abs(ny-target.y);
+   let lp=loopVisitPenalty(nx,ny);
+   let dk=snake[0].x+','+snake[0].y+'_'+d[0]+','+d[1];
+   let danger=dangerMap[dk]||0;
+   return {d,tr,space,md,lp,danger};
+ });
+ rows.sort((a,b)=>{
+   if(a.tr!==b.tr) return (b.tr?1:0)-(a.tr?1:0);
+   if(a.space!==b.space) return b.space-a.space;
+   if(a.md!==b.md) return a.md-b.md;
+   if(a.danger!==b.danger) return a.danger-b.danger;
+   return a.lp-b.lp;
+ });
+ let pick=rows[0];
+ logAIDecision({x:pick.d[0],y:pick.d[1]}, pick.tr?'survivalTailOK':'survival', pick.space, pick.tr);
+ return {x:pick.d[0],y:pick.d[1]};
+}
+
+// ——— Algorithm 3: Simple & Safe BFS ———
+// Simple but effective: find shortest safe path to food, never blocks self or walls
+function algorithm3SimpleSafe(){
+ let target=bonus?bonus:apple;
+ 
+ // IMPROVEMENT: If no safe path AND can't follow tail, check if we're trapped
+ // and try to maximize open space instead
+ let allMoves=getAllSafeMoves();
+ if(allMoves.length===0){
+   // Absolutely no safe moves - game over
+   return dir;
+ }
+ 
+ // IMPROVEMENT: Before choosing a move, verify it doesn't lead to immediate trap
+ // by checking if we can still reach our tail after the move
+ let safeMove=findSimpleSafePathToTarget(target);
+ if(safeMove){
+   // Double-check: after this move, will we have at least one safe move?
+   let testSnake=snake.map(s=>({...s}));
+   testSnake.unshift({x:snake[0].x+safeMove.x,y:snake[0].y+safeMove.y});
+   testSnake.pop();
+   let nextMoves=getAllSafeMovesForSnake(testSnake);
+   if(nextMoves.length>0){
+     logAIDecision(safeMove,'algo3simpleSafeToFood',0,true);
+     return safeMove;
+   }
+   // This move leads to trap - don't take it
+ }
+
+ // No safe path to food - try to follow tail
+ let tailMove=followTailSimple();
+ if(tailMove){
+   logAIDecision(tailMove,'algo3followTail',0,true);
+   return tailMove;
+ }
+
+ // Last resort: pick any safe move that maximizes open space
+ let anyMove=pickAnySafeMove();
+ if(anyMove){
+   logAIDecision(anyMove,'algo3anySafe',0,false);
+   return anyMove;
+ }
+ 
+ // Absolutely no safe moves - game over anyway, try current direction
+ logAIDecision(dir,'algo3lastResort',0,false);
+ return dir;
+}
+
+// Get all safe moves for current snake
+function getAllSafeMoves(){
+ let head=snake[0];
+ let dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+ let safeMoves=[];
+ 
+ for(let d of dirs){
+   let nx=head.x+d[0], ny=head.y+d[1];
+   
+   // Check walls
+   if(nx<0||ny<0||nx>=gridSize||ny>=gridSize) continue;
+   
+   // Check self collision
+   let hits=false;
+   for(let i=0;i<snake.length-1;i++){
+     if(snake[i].x===nx && snake[i].y===ny){
+       hits=true;
+       break;
+     }
+   }
+   if(hits) continue;
+   
+   // Check tail reachable after move
+   let testSnake=snake.map(s=>({...s}));
+   testSnake.unshift({x:nx,y:ny});
+   testSnake.pop();
+   if(tailReachableSimple(testSnake)){
+     safeMoves.push({x:d[0],y:d[1]});
+   }
+ }
+ 
+ return safeMoves;
+}
+
+// Get all safe moves for a given snake state
+function getAllSafeMovesForSnake(snk){
+ let head=snk[0];
+ let dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+ let safeMoves=[];
+ 
+ for(let d of dirs){
+   let nx=head.x+d[0], ny=head.y+d[1];
+   
+   // Check walls
+   if(nx<0||ny<0||nx>=gridSize||ny>=gridSize) continue;
+   
+   // Check self collision
+   let hits=false;
+   for(let i=0;i<snk.length-1;i++){
+     if(snk[i].x===nx && snk[i].y===ny){
+       hits=true;
+       break;
+     }
+   }
+   if(hits) continue;
+   
+   safeMoves.push({x:d[0],y:d[1]});
+ }
+ 
+ return safeMoves;
+}
+
+// Find shortest safe path to target using BFS
+function findSimpleSafePathToTarget(target){
+ let head=snake[0];
+ let dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+
+ // BFS to find path
+ let queue=[{x:head.x,y:head.y,path:[]}];
+ let visited=new Set([head.x+','+head.y]);
+
+ while(queue.length>0){
+   let cur=queue.shift();
+
+   // Check if reached target
+   if(cur.x===target.x && cur.y===target.y && cur.path.length>0){
+     // Verify this path is safe (can reach tail after eating)
+     let testSnake=simulateSnakePath(cur.path, true);
+     if(testSnake && tailReachableSimple(testSnake)){
+       return {x:cur.path[0].dx,y:cur.path[0].dy};
+     }
+   }
+
+   // Limit search depth for performance
+   if(cur.path.length>gridSize*2) continue;
+
+   // Explore neighbors
+   for(let d of dirs){
+     let nx=cur.x+d[0], ny=cur.y+d[1];
+     let key=nx+','+ny;
+
+     // Check bounds - NEVER hit walls
+     if(nx<0||ny<0||nx>=gridSize||ny>=gridSize) continue;
+     if(visited.has(key)) continue;
+
+     // Check collision with snake body - NEVER hit self
+     let hits=false;
+     for(let i=0;i<snake.length-1;i++){
+       if(snake[i].x===nx && snake[i].y===ny){
+         hits=true;
+         break;
+       }
+     }
+     if(hits) continue;
+
+     visited.add(key);
+     let newPath=[...cur.path,{dx:d[0],dy:d[1]}];
+     queue.push({x:nx,y:ny,path:newPath});
+   }
+ }
+
+ return null;
+}
+
+// Simulate snake movement along a path
+function simulateSnakePath(path, willGrow=false){
+ let simSnake=snake.map(s=>({...s}));
+ for(let i=0;i<path.length;i++){
+   let move=path[i];
+   let newHead={x:simSnake[0].x+move.dx,y:simSnake[0].y+move.dy};
+   simSnake.unshift(newHead);
+   
+   // Only pop tail if not growing
+   if(!willGrow){
+     simSnake.pop();
+   }
+ }
+ return simSnake;
+}
+
+// Check if tail is reachable from head (simple version)
+function tailReachableSimple(snk){
+ if(snk.length<=1) return true;
+ let head=snk[0], tail=snk[snk.length-1];
+ if(head.x===tail.x && head.y===tail.y) return true;
+
+ let dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+ let queue=[{x:head.x,y:head.y}];
+ let visited=new Set([head.x+','+head.y]);
+
+ while(queue.length>0){
+   let cur=queue.shift();
+   if(cur.x===tail.x && cur.y===tail.y) return true;
+
+   for(let d of dirs){
+     let nx=cur.x+d[0], ny=cur.y+d[1];
+     let key=nx+','+ny;
+     // NEVER go outside walls
+     if(nx<0||ny<0||nx>=gridSize||ny>=gridSize) continue;
+     if(visited.has(key)) continue;
+
+     // Check collision with snake body (excluding tail which will move)
+     let hits=false;
+     for(let i=0;i<snk.length-1;i++){
+       if(snk[i].x===nx && snk[i].y===ny){
+         hits=true;
+         break;
+       }
+     }
+     if(hits) continue;
+
+     visited.add(key);
+     queue.push({x:nx,y:ny});
+   }
+ }
+ return false;
+}
+
+// Follow tail - move towards tail to stay alive, never blocking self
+function followTailSimple(){
+ let tail=snake[snake.length-1];
+ let head=snake[0];
+ let dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+
+ // Find all safe moves that keep tail reachable
+ let safeMoves=[];
+ for(let d of dirs){
+   let nx=head.x+d[0], ny=head.y+d[1];
+   
+   // NEVER hit walls
+   if(nx<0||ny<0||nx>=gridSize||ny>=gridSize) continue;
+
+   // NEVER hit self
+   let hits=false;
+   for(let i=0;i<snake.length-1;i++){
+     if(snake[i].x===nx && snake[i].y===ny){
+       hits=true;
+       break;
+     }
+   }
+   if(hits) continue;
+
+   // Check if this move keeps tail reachable
+   let testSnake=snake.map(s=>({...s}));
+   testSnake.unshift({x:nx,y:ny});
+   testSnake.pop();
+   if(tailReachableSimple(testSnake)){
+     let dist=Math.abs(nx-tail.x)+Math.abs(ny-tail.y);
+     safeMoves.push({d:{x:d[0],y:d[1]},dist:dist});
+   }
+ }
+
+ if(safeMoves.length===0) return null;
+ 
+ // Pick move closest to tail
+ safeMoves.sort((a,b)=>a.dist-b.dist);
+ return safeMoves[0].d;
+}
+
+// Pick any safe move - NEVER hits walls or self
+function pickAnySafeMove(){
+ let head=snake[0];
+ let dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+
+ // First try: find move that keeps tail reachable
+ for(let d of dirs){
+   let nx=head.x+d[0], ny=head.y+d[1];
+   
+   // NEVER hit walls
+   if(nx<0||ny<0||nx>=gridSize||ny>=gridSize) continue;
+
+   // NEVER hit self
+   let hits=false;
+   for(let i=0;i<snake.length-1;i++){
+     if(snake[i].x===nx && snake[i].y===ny){
+       hits=true;
+       break;
+     }
+   }
+   if(!hits){
+     // Verify tail still reachable
+     let testSnake=snake.map(s=>({...s}));
+     testSnake.unshift({x:nx,y:ny});
+     testSnake.pop();
+     if(tailReachableSimple(testSnake)){
+       return {x:d[0],y:d[1]};
+     }
+   }
+ }
+ 
+ // Second try: any move that doesn't hit walls or self
+ for(let d of dirs){
+   let nx=head.x+d[0], ny=head.y+d[1];
+   
+   // NEVER hit walls
+   if(nx<0||ny<0||nx>=gridSize||ny>=gridSize) continue;
+
+   // NEVER hit self
+   let hits=false;
+   for(let i=0;i<snake.length-1;i++){
+     if(snake[i].x===nx && snake[i].y===ny){
+       hits=true;
+       break;
+     }
+   }
+   if(!hits) return {x:d[0],y:d[1]};
+ }
+ 
+ return null;
+}
+
+// Helper function to log AI decisions
+function logAIDecision(move, strategy, pathLen, safe){
+ let logEntry={
+   frame: debugLog.length,
+   score: score,
+   snakeLen: snake.length,
+   head: {x: snake[0].x, y: snake[0].y},
+   target: {x: (bonus?bonus:apple).x, y: (bonus?bonus:apple).y},
+   chosenDir: move,
+   strategy: strategy,
+   pathLength: pathLen,
+   safe: safe,
+   loopDetected: loopDetected,
+   stuckCounter: stuckCounter
+ };
+ debugLog.push(logEntry);
+ if(debugLog.length > 500) debugLog.shift();
+ 
+ if(debugLog.length % 50 === 0 || loopDetected){
+   console.log('AI Decision:', logEntry);
+ }
+}
+
+// Manual advancement mode variables
+let manualStepMode=false;
+let pendingDir=null;
+
+window.addEventListener('resize',resizeCanvas);
+
+document.addEventListener('keydown',e=>{
+ // Space = pause/resume (works in ALL modes, even auto)
+ // BUT: Don't pause if typing in notes textarea
+ if(e.code==='Space'){
+   // Check if typing in notes
+   if(document.activeElement === document.getElementById('personalNotes')){
+     return; // Allow space in notes
+   }
+   e.preventDefault();
+   togglePause();
+   return;
+ }
+ 
+ // Tab = next W slice in 4D manual mode
+ if(e.code==='Tab' && is4dMode && !document.getElementById('autoToggle').checked){
+   e.preventDefault();
+   dir4d.w=(dir4d.w+1)%gridSize4d;
+   if(manualStepMode){
+     pendingDir={...dir4d};
+   }
+   return;
+ }
+ 
+ // §/± = previous W slice in 4D manual mode (various keyboard layouts)
+ if((e.key==='§' || e.key==='±' || e.code==='Backquote') && is4dMode && !document.getElementById('autoToggle').checked){
+   e.preventDefault();
+   dir4d.w=(dir4d.w-1+gridSize4d)%gridSize4d;
+   if(manualStepMode){
+     pendingDir={...dir4d};
+   }
+   return;
+ }
+ 
+ // Skip if auto mode is on (except for special keys above)
+ if(document.getElementById('autoToggle').checked) return;
+ 
+ let diagonal=document.getElementById('diagonalMode').checked;
+ let newDir=null;
+ let is3dControl=false;
+ 
+ // ===== 2D MODE CONTROLS =====
+ if(!is3dMode && !is4dMode){
+   // Arrow keys
+   if(e.key==='ArrowUp') newDir={x:0,y:-1};
+   if(e.key==='ArrowDown') newDir={x:0,y:1};
+   if(e.key==='ArrowLeft') newDir={x:-1,y:0};
+   if(e.key==='ArrowRight') newDir={x:1,y:0};
+   
+   // WASD (English, any case)
+   let k=e.key.toLowerCase();
+   if(k==='w') newDir={x:0,y:-1};
+   if(k==='s' || k==='d') newDir={x:0,y:1}; // Both D and S for down
+   if(k==='a') newDir={x:-1,y:0};
+   if(k==='d' && e.key==='d') newDir={x:1,y:0}; // D for right (when not lowercase s)
+   
+   // Hebrew keyboard support
+   if(e.key==='צ') newDir={x:0,y:-1}; // Up
+   if(e.key==='ך') newDir={x:0,y:1}; // Down
+   if(e.key==='כ') newDir={x:-1,y:0}; // Left
+   if(e.key==='ף') newDir={x:1,y:0}; // Right
+   
+   // Diagonals
+   if(diagonal){
+     if(k==='e' || e.key==='ק') newDir={x:1,y:-1};
+     if(k==='q' || e.key==='ש') newDir={x:-1,y:-1};
+     if(k==='z' || e.key==='ס') newDir={x:-1,y:1};
+     if(k==='c' || e.key==='ם') newDir={x:1,y:1};
+   }
+ }
+ 
+ // ===== 3D MODE CONTROLS =====
+ if(is3dMode && !is4dMode){
+   // Arrow keys (XY plane)
+   if(e.key==='ArrowUp') newDir={x:0,y:-1,z:0};
+   if(e.key==='ArrowDown') newDir={x:0,y:1,z:0};
+   if(e.key==='ArrowLeft') newDir={x:-1,y:0,z:0};
+   if(e.key==='ArrowRight') newDir={x:1,y:0,z:0};
+   
+   // WASD
+   let k=e.key.toLowerCase();
+   if(k==='w') newDir={x:0,y:-1,z:0};
+   if(k==='s' || k==='d') newDir={x:0,y:1,z:0};
+   if(k==='a') newDir={x:-1,y:0,z:0};
+   if(k==='d' && e.key==='d') newDir={x:1,y:0,z:0};
+   
+   // Hebrew
+   if(e.key==='צ') newDir={x:0,y:-1,z:0};
+   if(e.key==='ך') newDir={x:0,y:1,z:0};
+   if(e.key==='כ') newDir={x:-1,y:0,z:0};
+   if(e.key==='ף') newDir={x:1,y:0,z:0};
+   
+   // Z-axis: Control = in (Z+), Option/Alt = out (Z-)
+   if(e.ctrlKey || e.key==='Control'){
+     newDir={x:0,y:0,z:1};
+     is3dControl=true;
+   }
+   if(e.altKey || e.key==='Alt' || e.key==='Option'){
+     newDir={x:0,y:0,z:-1};
+     is3dControl=true;
+   }
+   
+   // Also allow I/K for Z-axis (English)
+   if(k==='i') newDir={x:0,y:0,z:-1}; // I for in (toward viewer)
+   if(k==='k') newDir={x:0,y:0,z:1}; // K for out (away from viewer)
+ }
+ 
+ // ===== 4D MODE CONTROLS =====
+ if(is4dMode){
+   // Arrow keys (XY plane)
+   if(e.key==='ArrowUp') newDir={x:0,y:-1,z:0,w:0};
+   if(e.key==='ArrowDown') newDir={x:0,y:1,z:0,w:0};
+   if(e.key==='ArrowLeft') newDir={x:-1,y:0,z:0,w:0};
+   if(e.key==='ArrowRight') newDir={x:1,y:0,z:0,w:0};
+   
+   // WASD
+   let k=e.key.toLowerCase();
+   if(k==='w') newDir={x:0,y:-1,z:0,w:0};
+   if(k==='s' || k==='d') newDir={x:0,y:1,z:0,w:0};
+   if(k==='a') newDir={x:-1,y:0,z:0,w:0};
+   if(k==='d' && e.key==='d') newDir={x:1,y:0,z:0,w:0};
+   
+   // Hebrew
+   if(e.key==='צ') newDir={x:0,y:-1,z:0,w:0};
+   if(e.key==='ך') newDir={x:0,y:1,z:0,w:0};
+   if(e.key==='כ') newDir={x:-1,y:0,z:0,w:0};
+   if(e.key==='ף') newDir={x:1,y:0,z:0,w:0};
+   
+   // Z-axis: Control = in, Option/Alt = out
+   if(e.ctrlKey){
+     newDir={x:0,y:0,z:1,w:0};
+   }
+   if(e.altKey || e.key==='Alt' || e.key==='Option'){
+     newDir={x:0,y:0,z:-1,w:0};
+   }
+ }
+ 
+ if(newDir){
+   e.preventDefault();
+   
+   if(is4dMode){
+     // Prevent reversing
+     if(newDir.x===-dir4d.x && newDir.y===-dir4d.y && newDir.z===-dir4d.z && newDir.w===-dir4d.w) return;
+     dir4d=newDir;
+     if(manualStepMode){
+       pendingDir={...dir4d};
+     }
+   } else if(is3dMode){
+     // Prevent reversing
+     if(newDir.x===-dir3d.x && newDir.y===-dir3d.y && newDir.z===-dir3d.z) return;
+     dir3d=newDir;
+     if(manualStepMode){
+       pendingDir={...dir3d};
+     }
+   } else {
+     // 2D
+     if(!diagonal && newDir.x===-dir.x && newDir.y===-dir.y) return;
+     let neck=snake.length>1?snake[1]:null;
+     if(neck){
+       let nx=snake[0].x+newDir.x, ny=snake[0].y+newDir.y;
+       if(nx===neck.x && ny===neck.y) return;
+     }
+     dir=newDir;
+     if(manualStepMode){
+       pendingDir={...dir};
+     }
+   }
+ }
+});
+
+// Manual step execution
+function executeManualStep(){
+ if(!manualStepMode || !pendingDir) return;
+ 
+ if(is4dMode){
+   dir4d={...pendingDir};
+   // Game loop will use this direction
+ } else if(is3dMode){
+   dir3d={...pendingDir};
+ } else {
+   dir={...pendingDir};
+ }
+ pendingDir=null;
+}
+
+// Decay danger map over time
+setInterval(()=>{
+ for(let key in dangerMap){
+   dangerMap[key]*=0.95;
+   if(dangerMap[key]<0.1) delete dangerMap[key];
+ }
+},5000);
+
+// ========== 3D MODE FUNCTIONS ==========
+
+function setGameMode(mode){
+ // Save current game state
+ if(is3dMode){
+   gameStates.mode3d={
+     snake:[...snake3d],
+     dir:{...dir3d},
+     apple:{...apple3d},
+     bonus:bonus3d?{...bonus3d}:null,
+     score:score,
+     bonusValue:bonusValue,
+     bonusTimer:bonusTimer
+   };
+   speed3d=parseInt(document.getElementById('speedInput').value);
+ } else if(is4dMode){
+   gameStates.mode4d={
+     snake:[...snake4d],
+     dir:{...dir4d},
+     apple:{...apple4d},
+     bonus:bonus4d?{...bonus4d}:null,
+     score:score,
+     bonusValue:bonusValue,
+     bonusTimer:bonusTimer
+   };
+   speed4d=parseInt(document.getElementById('speedInput').value);
+ } else {
+   gameStates.mode2d={
+     snake:[...snake],
+     dir:{...dir},
+     apple:{...apple},
+     bonus:bonus?{...bonus}:null,
+     score:score,
+     bonusValue:bonusValue,
+     bonusTimer:bonusTimer
+   };
+   speed2d=parseInt(document.getElementById('speedInput').value);
+ }
+
+ // Update button states
+ document.querySelectorAll('.mode-selector-btn').forEach(btn=>{
+   btn.classList.remove('active');
+   if(btn.dataset.mode===mode) btn.classList.add('active');
+ });
+
+ // Hide all containers
+ document.getElementById('gameContainer2d').style.display='none';
+ document.getElementById('gameContainer3d').style.display='none';
+ document.getElementById('gameContainer4d').style.display='none';
+ document.getElementById('btnInteractive3d').style.display='none';
+ document.getElementById('btnManualStepToggle').style.display='none';
+ document.getElementById('btnLayoutManager').style.display='none';
+
+ // Reset mode flags
+ is3dMode=false;
+ is4dMode=false;
+ manualStepMode=false;
+
+ if(mode==='2d'){
+   document.getElementById('gameContainer2d').style.display='block';
+   // Restore speed for 2D mode
+   document.getElementById('speedRange').value=speed2d;
+   document.getElementById('speedInput').value=speed2d;
+   // Restore or start new game
+   if(gameStates.mode2d){
+     snake=gameStates.mode2d.snake.map(s=>({...s}));
+     dir={...gameStates.mode2d.dir};
+     apple={...gameStates.mode2d.apple};
+     bonus=gameStates.mode2d.bonus?{...gameStates.mode2d.bonus}:null;
+     score=gameStates.mode2d.score;
+     bonusValue=gameStates.mode2d.bonusValue;
+     bonusTimer=gameStates.mode2d.bonusTimer;
+     updateScore();
+   } else {
+     startGame();
+   }
+   setSpeed();
+ } else if(mode==='3d'){
+   document.getElementById('gameContainer3d').style.display='flex';
+   document.getElementById('btnLayoutManager').style.display='block';
+   is3dMode=true;
+   init3dCanvases();
+   // Restore speed for 3D mode
+   document.getElementById('speedRange').value=speed3d;
+   document.getElementById('speedInput').value=speed3d;
+   // Restore or start new game
+   if(gameStates.mode3d){
+     snake3d=gameStates.mode3d.snake.map(s=>({...s}));
+     dir3d={...gameStates.mode3d.dir};
+     apple3d={...gameStates.mode3d.apple};
+     bonus3d=gameStates.mode3d.bonus?{...gameStates.mode3d.bonus}:null;
+     score=gameStates.mode3d.score;
+     bonusValue=gameStates.mode3d.bonusValue;
+     bonusTimer=gameStates.mode3d.bonusTimer;
+     updateScore();
+   } else {
+     startGame3d();
+   }
+   // Show interactive 3D button
+   document.getElementById('btnInteractive3d').style.display='block';
+   // Show manual step if auto is off
+   if(!document.getElementById('autoToggle').checked){
+     document.getElementById('btnManualStepToggle').style.display='block';
+     manualStepMode=true;
+     document.getElementById('btnManualStepToggle').textContent='👆 התקדמות ידנית (פעיל)';
+     document.getElementById('btnManualStepToggle').classList.add('active');
+   }
+   setSpeed();
+ } else if(mode==='4d'){
+   document.getElementById('gameContainer4d').style.display='flex';
+   is4dMode=true;
+   init4dCanvases();
+   // Restore speed for 4D mode
+   document.getElementById('speedRange').value=speed4d;
+   document.getElementById('speedInput').value=speed4d;
+   // Restore or start new game
+   if(gameStates.mode4d){
+     snake4d=gameStates.mode4d.snake.map(s=>({...s}));
+     dir4d={...gameStates.mode4d.dir};
+     apple4d={...gameStates.mode4d.apple};
+     bonus4d=gameStates.mode4d.bonus?{...gameStates.mode4d.bonus}:null;
+     score=gameStates.mode4d.score;
+     bonusValue=gameStates.mode4d.bonusValue;
+     bonusTimer=gameStates.mode4d.bonusTimer;
+     updateScore();
+   } else {
+     startGame4d();
+   }
+   // Show manual step if auto is off
+   if(!document.getElementById('autoToggle').checked){
+     document.getElementById('btnManualStepToggle').style.display='block';
+     manualStepMode=true;
+     document.getElementById('btnManualStepToggle').textContent='👆 התקדמות ידנית (פעיל)';
+     document.getElementById('btnManualStepToggle').classList.add('active');
+   }
+   setSpeed();
+ }
+ pushRuntimeChangelog('מצב משחק: '+mode,'gameMode',0);
+}
+
+function toggle3dMode(){
+ setGameMode(is3dMode?'2d':'3d');
+}
+
+function toggle4dMode(){
+ setGameMode(is4dMode?'2d':'4d');
+}
+
+function init3dCanvases(){
+ canvas3dCtxs.iso=document.getElementById('canvas3dIso').getContext('2d');
+ canvas3dCtxs.follower3d=document.getElementById('canvas3dFollower3d').getContext('2d');
+ canvas3dCtxs.xy=document.getElementById('canvas3dXY').getContext('2d');
+ canvas3dCtxs.xz=document.getElementById('canvas3dXZ').getContext('2d');
+ canvas3dCtxs.yz=document.getElementById('canvas3dYZ').getContext('2d');
+
+ const isoSize=gridSize3d*cellSize3d*1.5;
+ const smallSize=gridSize3d*cellSize3d;
+
+ document.getElementById('canvas3dIso').width=isoSize;
+ document.getElementById('canvas3dIso').height=isoSize;
+ document.getElementById('canvas3dFollower3d').width=smallSize*1.4;
+ document.getElementById('canvas3dFollower3d').height=smallSize*1.4;
+ document.getElementById('canvas3dXY').width=smallSize;
+ document.getElementById('canvas3dXY').height=smallSize;
+ document.getElementById('canvas3dXZ').width=smallSize;
+ document.getElementById('canvas3dXZ').height=smallSize;
+ document.getElementById('canvas3dYZ').width=smallSize;
+ document.getElementById('canvas3dYZ').height=smallSize;
+}
+
+function startGame3d(){
+ snake3d=[];
+ for(let i=0;i<5;i++) snake3d.push({x:5-i,y:5,z:5});
+ dir3d={x:1,y:0,z:0};
+ score=0;
+ updateScore();
+ spawnApple3d();
+ bonus3d=null;
+ paused=false;
+ updatePauseButtonLabel();
+ setSpeed();
+ pushRuntimeChangelog('התחל משחק 3D','restart3d',280);
+}
+
+function spawnApple3d(){
+ let pos;
+ do{
+   pos={
+     x:Math.floor(Math.random()*gridSize3d),
+     y:Math.floor(Math.random()*gridSize3d),
+     z:Math.floor(Math.random()*gridSize3d)
+   };
+ } while(snake3d.some(s=>s.x===pos.x && s.y===pos.y && s.z===pos.z));
+ apple3d=pos;
+}
+
+function spawnBonus3d(){
+ let pos;
+ do{
+   pos={
+     x:Math.floor(Math.random()*gridSize3d),
+     y:Math.floor(Math.random()*gridSize3d),
+     z:Math.floor(Math.random()*gridSize3d)
+   };
+ } while(snake3d.some(s=>s.x===pos.x && s.y===pos.y && s.z===pos.z) || (apple3d && pos.x===apple3d.x && pos.y===apple3d.y && pos.z===apple3d.z));
+ bonus3d=pos;
+ bonusValue=18;
+ bonusTimer=60;
+}
+
+function getDirs3d(){
+ let diagonal=document.getElementById('diagonalMode').checked;
+ let dirs=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+ if(diagonal){
+   dirs.push([1,1,0],[1,-1,0],[-1,1,0],[-1,-1,0]);
+   dirs.push([1,0,1],[1,0,-1],[-1,0,1],[-1,0,-1]);
+   dirs.push([0,1,1],[0,1,-1],[0,-1,1],[0,-1,-1]);
+   dirs.push([1,1,1],[1,1,-1],[1,-1,1],[1,-1,-1]);
+   dirs.push([-1,1,1],[-1,1,-1],[-1,-1,1],[-1,-1,-1]);
+ }
+ return dirs;
+}
+
+function isValidPos3d(pos){
+ if(pos.x<0||pos.y<0||pos.z<0||pos.x>=gridSize3d||pos.y>=gridSize3d||pos.z>=gridSize3d) return false;
+ return !snake3d.some(s=>s.x===pos.x && s.y===pos.y && s.z===pos.z);
+}
+
+function gameLoop3d(){
+ if(paused) return;
+
+ let isAuto=document.getElementById('autoToggle').checked;
+ let aiMode=document.getElementById('aiMode').value;
+ let lessFailMode=document.getElementById('noFail').checked;
+
+ // Manual step mode
+ if(manualStepMode && pendingDir){
+   dir3d={...pendingDir};
+   pendingDir=null;
+ } else if(manualStepMode){
+   return; // Wait for key press
+ } else if(isAuto){
+   dir3d=getAI3d(aiMode);
+ }
+
+ let head={x:snake3d[0].x+dir3d.x, y:snake3d[0].y+dir3d.y, z:snake3d[0].z+dir3d.z};
+ let fail=!isValidPos3d(head);
+ 
+ if(fail && lessFailMode){
+   let dirs=getDirs3d();
+   for(let d of dirs){
+     let nx=snake3d[0].x+d[0], ny=snake3d[0].y+d[1], nz=snake3d[0].z+d[2];
+     if(isValidPos3d({x:nx,y:ny,z:nz})){
+       dir3d={x:d[0],y:d[1],z:d[2]};
+       head={x:nx,y:ny,z:nz};
+       fail=false;
+       break;
+     }
+   }
+ }
+ 
+ if(fail){
+   endGame('נגמר המשחק (3D)');
+   return;
+ }
+ 
+ snake3d.unshift(head);
+
+ let ateApple=(head.x===apple3d.x && head.y===apple3d.y && head.z===apple3d.z);
+ let ateBonus=bonus3d && (head.x===bonus3d.x && head.y===bonus3d.y && head.z===bonus3d.z);
+
+ if(ateApple){
+   score++;
+   updateScore();
+   spawnApple3d();
+   if(score%6===0) spawnBonus3d();
+ } else if(ateBonus){
+   // Bonus: only increase score, don't grow snake
+   score+=bonusValue;
+   updateScore();
+   bonus3d=null;
+   snake3d.pop(); // Still pop to maintain length
+ } else {
+   snake3d.pop();
+ }
+ 
+ if(bonus3d){
+   bonusTimer--;
+   if(bonusTimer%10===0){
+     bonusValue-=3;
+     if(bonusValue<=0) bonus3d=null;
+   }
+ }
+ 
+ if(snake3d.length>=gridSize3d*gridSize3d*gridSize3d-2){
+   endGame('כל הכבוד! (3D)');
+   return;
+ }
+
+ draw3d();
+ 
+ // Sync interactive 3D view
+ if(isInteractive3d){
+   syncInteractive3d();
+ }
+}
+
+function getAI3d(aiMode){
+ let target=bonus3d||apple3d;
+ let dirs=getDirs3d();
+ let valid=dirs.filter(d=>{
+   let nx=snake3d[0].x+d[0], ny=snake3d[0].y+d[1], nz=snake3d[0].z+d[2];
+   return isValidPos3d({x:nx,y:ny,z:nz});
+ });
+ 
+ if(valid.length===0) return dir3d;
+ 
+ // Sort by distance to target
+ valid.sort((a,b)=>{
+   let ax=snake3d[0].x+a[0], ay=snake3d[0].y+a[1], az=snake3d[0].z+a[2];
+   let bx=snake3d[0].x+b[0], by=snake3d[0].y+b[1], bz=snake3d[0].z+b[2];
+   let da=Math.abs(ax-target.x)+Math.abs(ay-target.y)+Math.abs(az-target.z);
+   let db=Math.abs(bx-target.x)+Math.abs(by-target.y)+Math.abs(bz-target.z);
+   return da-db;
+ });
+ 
+ return {x:valid[0][0], y:valid[0][1], z:valid[0][2]};
+}
+
+function draw3d(){
+ if(canvas3dCtxs.iso) draw3dIso();
+ if(canvas3dCtxs.follower3d) draw3dFollower3d();
+ if(canvas3dCtxs.xy) draw3dPlane('xy');
+ if(canvas3dCtxs.xz) draw3dPlane('xz');
+ if(canvas3dCtxs.yz) draw3dPlane('yz');
+}
+
+function draw3dFollower3d(){
+ let ctx=canvas3dCtxs.follower3d;
+ if(!ctx) return;
+ let w=ctx.canvas.width, h=ctx.canvas.height;
+ let step=cellSize3d*0.9;
+
+ ctx.fillStyle='#001f3f';
+ ctx.fillRect(0,0,w,h);
+
+ // Center on snake head in 3D
+ let head=snake3d[0];
+ let cx=w/2, cy=h/2;
+
+ // Draw 3D grid around head
+ ctx.strokeStyle='#1a3a5c';
+ ctx.lineWidth=0.3;
+ for(let dx=-4;dx<=4;dx++){
+   for(let dy=-4;dy<=4;dy++){
+     for(let dz=-2;dz<=2;dz++){
+       let x=cx+dx*step*0.866-dy*step*0.866;
+       let y=cy+dx*step*0.5+dy*step*0.5-dz*step*0.5;
+       let dist=Math.abs(dx)+Math.abs(dy)+Math.abs(dz);
+       let alpha=1-dist*0.1;
+       if(alpha>0.2){
+         ctx.fillStyle=`rgba(42,74,108,${alpha})`;
+         ctx.fillRect(x-1.5,y-1.5,3,3);
+       }
+     }
+   }
+ }
+
+ // Draw snake segments (head + 4 body) with 3D depth
+ ctx.strokeStyle='#00ffff';
+ ctx.lineWidth=step*0.25;
+ ctx.lineCap='round';
+ ctx.lineJoin='round';
+ ctx.beginPath();
+
+ for(let i=0;i<Math.min(5,snake3d.length);i++){
+   let s=snake3d[i];
+   let dx=s.x-head.x;
+   let dy=s.y-head.y;
+   let dz=s.z-head.z;
+   
+   let x=cx+dx*step*0.866-dy*step*0.866;
+   let y=cy+dx*step*0.5+dy*step*0.5-dz*step*0.5;
+
+   if(i===0) ctx.moveTo(x,y);
+   else ctx.lineTo(x,y);
+ }
+ ctx.stroke();
+
+ // Draw each segment as circle with depth cue
+ for(let i=0;i<Math.min(5,snake3d.length);i++){
+   let s=snake3d[i];
+   let dx=s.x-head.x;
+   let dy=s.y-head.y;
+   let dz=s.z-head.z;
+   
+   let x=cx+dx*step*0.866-dy*step*0.866;
+   let y=cy+dx*step*0.5+dy*step*0.5-dz*step*0.5;
+   
+   let dist=Math.abs(dx)+Math.abs(dy)+Math.abs(dz);
+   let size=step*(0.4-dist*0.04);
+   let alpha=1-dist*0.12;
+   
+   if(i===0){
+     ctx.fillStyle='#00ffff';
+     ctx.shadowColor='#00ffff';
+     ctx.shadowBlur=15;
+     ctx.beginPath();
+     ctx.arc(x,y,size,0,Math.PI*2);
+     ctx.fill();
+     ctx.shadowBlur=0;
+   } else {
+     ctx.fillStyle=`rgba(0,255,255,${alpha})`;
+     ctx.beginPath();
+     ctx.arc(x,y,size*0.8,0,Math.PI*2);
+     ctx.fill();
+   }
+ }
+
+ // Draw apple if nearby
+ if(apple3d){
+   let dx=apple3d.x-head.x;
+   let dy=apple3d.y-head.y;
+   let dz=apple3d.z-head.z;
+   
+   if(Math.abs(dx)<=4 && Math.abs(dy)<=4 && Math.abs(dz)<=2){
+     let x=cx+dx*step*0.866-dy*step*0.866;
+     let y=cy+dx*step*0.5+dy*step*0.5-dz*step*0.5;
+     
+     ctx.fillStyle='#ff4444';
+     ctx.shadowColor='#ff4444';
+     ctx.shadowBlur=12;
+     ctx.beginPath();
+     ctx.arc(x,y,step*0.4,0,Math.PI*2);
+     ctx.fill();
+     ctx.shadowBlur=0;
+   }
+ }
+}
+
+function draw3dPlane(plane){
+ let ctx=canvas3dCtxs[plane];
+ if(!ctx) return;
+ let w=ctx.canvas.width, h=ctx.canvas.height;
+ let step=cellSize3d;
+
+ ctx.fillStyle='#001f3f';
+ ctx.fillRect(0,0,w,h);
+
+ // Draw grid
+ ctx.strokeStyle='#1a3a5c';
+ ctx.lineWidth=0.5;
+ for(let i=0;i<=gridSize3d;i++){
+   ctx.beginPath();
+   ctx.moveTo(i*step,0);
+   ctx.lineTo(i*step,h);
+   ctx.stroke();
+   ctx.beginPath();
+   ctx.moveTo(0,i*step);
+   ctx.lineTo(w,i*step);
+   ctx.stroke();
+ }
+
+ // Draw snake as thin continuous line on this plane
+ ctx.strokeStyle='#00ffff';
+ ctx.lineWidth=step*0.15;
+ ctx.lineCap='round';
+ ctx.lineJoin='round';
+ ctx.beginPath();
+
+ let started=false;
+ for(let i=0;i<snake3d.length;i++){
+   let s=snake3d[i];
+   let x,y;
+   if(plane==='xy'){ x=s.x*step; y=s.y*step; }
+   else if(plane==='xz'){ x=s.x*step; y=s.z*step; }
+   else if(plane==='yz'){ x=s.y*step; y=s.z*step; }
+
+   if(!started){
+     ctx.moveTo(x+step/2,y+step/2);
+     started=true;
+   } else {
+     ctx.lineTo(x+step/2,y+step/2);
+   }
+ }
+ ctx.stroke();
+
+ // Draw head
+ if(snake3d.length>0){
+   let s=snake3d[0];
+   let x,y;
+   if(plane==='xy'){ x=s.x*step; y=s.y*step; }
+   else if(plane==='xz'){ x=s.x*step; y=s.z*step; }
+   else if(plane==='yz'){ x=s.y*step; y=s.z*step; }
+
+   ctx.fillStyle='#00ffff';
+   ctx.beginPath();
+   ctx.arc(x+step/2,y+step/2,step*0.3,0,Math.PI*2);
+   ctx.fill();
+ }
+
+ // Draw apple - always show in all planes
+ if(apple3d){
+   let x,y;
+   if(plane==='xy'){ x=apple3d.x*step; y=apple3d.y*step; }
+   else if(plane==='xz'){ x=apple3d.x*step; y=apple3d.z*step; }
+   else if(plane==='yz'){ x=apple3d.y*step; y=apple3d.z*step; }
+
+   ctx.fillStyle='red';
+   ctx.shadowColor='#ff0000';
+   ctx.shadowBlur=8;
+   ctx.beginPath();
+   ctx.arc(x+step/2,y+step/2,step*0.35,0,Math.PI*2);
+   ctx.fill();
+   ctx.shadowBlur=0;
+ }
+}
+
+function draw3dIso(){
+ let ctx=canvas3dCtxs.iso;
+ if(!ctx) return;
+ let w=ctx.canvas.width, h=ctx.canvas.height;
+ let step=cellSize3d*0.6;
+
+ ctx.fillStyle='#001f3f';
+ ctx.fillRect(0,0,w,h);
+
+ let cx=w/2, cy=h/2.5;
+
+ // Draw isometric grid points
+ ctx.strokeStyle='#1a3a5c';
+ ctx.lineWidth=0.3;
+ for(let i=0;i<=gridSize3d;i++){
+   for(let j=0;j<=gridSize3d;j++){
+     for(let k=0;k<=gridSize3d;k++){
+       let x=cx+(i-gridSize3d/2)*step*0.866-(j-gridSize3d/2)*step*0.866;
+       let y=cy+(i-gridSize3d/2)*step*0.5+(j-gridSize3d/2)*step*0.5-(k-gridSize3d/2)*step*0.5;
+       ctx.fillStyle='#2a4a6c';
+       ctx.fillRect(x-1,y-1,2,2);
+     }
+   }
+ }
+
+ // Draw vertical grid lines
+ ctx.strokeStyle='#1a3a5c';
+ ctx.lineWidth=0.3;
+ for(let i=0;i<=gridSize3d;i++){
+   for(let j=0;j<=gridSize3d;j++){
+     let x1=cx+(i-gridSize3d/2)*step*0.866-(j-gridSize3d/2)*step*0.866;
+     let y1=cy+(i-gridSize3d/2)*step*0.5+(j-gridSize3d/2)*step*0.5-(0-gridSize3d/2)*step;
+     let x2=cx+(i-gridSize3d/2)*step*0.866-(j-gridSize3d/2)*step*0.866;
+     let y2=cy+(i-gridSize3d/2)*step*0.5+(j-gridSize3d/2)*step*0.5-(gridSize3d-gridSize3d/2)*step;
+     ctx.beginPath();
+     ctx.moveTo(x1,y1);
+     ctx.lineTo(x2,y2);
+     ctx.stroke();
+   }
+ }
+
+ // Draw snake as thin continuous cyan line
+ if(snake3d.length>1){
+   ctx.strokeStyle='#00ffff';
+   ctx.lineWidth=step*0.15;
+   ctx.lineCap='round';
+   ctx.lineJoin='round';
+   ctx.beginPath();
+
+   for(let i=0;i<snake3d.length;i++){
+     let s=snake3d[i];
+     let x=cx+(s.x-gridSize3d/2)*step*0.866-(s.y-gridSize3d/2)*step*0.866;
+     let y=cy+(s.x-gridSize3d/2)*step*0.5+(s.y-gridSize3d/2)*step*0.5-(s.z-gridSize3d/2)*step;
+
+     if(i===0) ctx.moveTo(x,y);
+     else ctx.lineTo(x,y);
+   }
+   ctx.stroke();
+ }
+
+ // Draw head as cyan circle
+ if(snake3d.length>0){
+   let s=snake3d[0];
+   let x=cx+(s.x-gridSize3d/2)*step*0.866-(s.y-gridSize3d/2)*step*0.866;
+   let y=cy+(s.x-gridSize3d/2)*step*0.5+(s.y-gridSize3d/2)*step*0.5-(s.z-gridSize3d/2)*step;
+   ctx.fillStyle='#00ffff';
+   ctx.beginPath();
+   ctx.arc(x,y,step*0.25,0,Math.PI*2);
+   ctx.fill();
+ }
+
+ // Draw apple
+ if(apple3d){
+   let x=cx+(apple3d.x-gridSize3d/2)*step*0.866-(apple3d.y-gridSize3d/2)*step*0.866;
+   let y=cy+(apple3d.x-gridSize3d/2)*step*0.5+(apple3d.y-gridSize3d/2)*step*0.5-(apple3d.z-gridSize3d/2)*step;
+   ctx.fillStyle='red';
+   ctx.beginPath();
+   ctx.arc(x,y-step*0.35,step*0.4,0,Math.PI*2);
+   ctx.fill();
+ }
+}
+
+function draw3dFollowerXY(){
+ let ctx=canvas3dCtxs.follower;
+ if(!ctx) return;
+ let w=ctx.canvas.width, h=ctx.canvas.height;
+ let step=cellSize3d*0.9;
+
+ ctx.fillStyle='#001f3f';
+ ctx.fillRect(0,0,w,h);
+
+ let head=snake3d[0];
+ let cx=w/2, cy=h/2;
+
+ // Draw grid as brighter blue background pattern
+ ctx.fillStyle='#0d2a4a';
+ for(let i=-4;i<=4;i++){
+   for(let j=-4;j<=4;j++){
+     ctx.fillRect(cx+i*step-4,cy+j*step-4,8,8);
+   }
+ }
+
+ // Draw grid lines
+ ctx.strokeStyle='#1a4a6c';
+ ctx.lineWidth=0.5;
+ for(let i=-4;i<=4;i++){
+   ctx.beginPath();
+   ctx.moveTo(cx+i*step,cy-4*step);
+   ctx.lineTo(cx+i*step,cy+4*step);
+   ctx.stroke();
+   ctx.beginPath();
+   ctx.moveTo(cx-4*step,cy+i*step);
+   ctx.lineTo(cx+4*step,cy+i*step);
+   ctx.stroke();
+ }
+
+ // Draw snake (head + 2 segments) as brighter blue drawing
+ ctx.fillStyle='#0066ff';
+ ctx.strokeStyle='#00aaff';
+ ctx.lineWidth=step*0.25;
+ ctx.lineCap='round';
+ ctx.lineJoin='round';
+
+ // Draw filled circles for each segment
+ for(let i=0;i<Math.min(3,snake3d.length);i++){
+   let s=snake3d[i];
+   let dx=s.x-head.x, dy=s.y-head.y;
+   let x=cx+dx*step;
+   let y=cy+dy*step;
+   
+   ctx.beginPath();
+   ctx.arc(x,y,step*0.35,0,Math.PI*2);
+   ctx.fill();
+ }
+ 
+ // Draw connecting lines
+ ctx.beginPath();
+ for(let i=0;i<Math.min(3,snake3d.length);i++){
+   let s=snake3d[i];
+   let dx=s.x-head.x, dy=s.y-head.y;
+   let x=cx+dx*step;
+   let y=cy+dy*step;
+   if(i===0) ctx.moveTo(x,y);
+   else ctx.lineTo(x,y);
+ }
+ ctx.stroke();
+
+ // Draw head as brighter circle
+ if(snake3d.length>0){
+   let s=snake3d[0];
+   let dx=s.x-head.x, dy=s.y-head.y;
+   ctx.fillStyle='#00ccff';
+   ctx.beginPath();
+   ctx.arc(cx+dx*step,cy+dy*step,step*0.4,0,Math.PI*2);
+   ctx.fill();
+ }
+}
+
+function draw3dFollowerZW(){
+ let ctx=canvas3dCtxs.follower2;
+ if(!ctx) return;
+ let w=ctx.canvas.width, h=ctx.canvas.height;
+ let step=cellSize3d*0.9;
+
+ ctx.fillStyle='#001f3f';
+ ctx.fillRect(0,0,w,h);
+
+ let head=snake3d[0];
+ let cx=w/2, cy=h/2;
+
+ // Draw grid as brighter blue background pattern
+ ctx.fillStyle='#0d2a4a';
+ for(let i=-4;i<=4;i++){
+   for(let j=-4;j<=4;j++){
+     ctx.fillRect(cx+i*step-4,cy+j*step-4,8,8);
+   }
+ }
+
+ // Draw grid lines
+ ctx.strokeStyle='#1a4a6c';
+ ctx.lineWidth=0.5;
+ for(let i=-4;i<=4;i++){
+   ctx.beginPath();
+   ctx.moveTo(cx+i*step,cy-4*step);
+   ctx.lineTo(cx+i*step,cy+4*step);
+   ctx.stroke();
+   ctx.beginPath();
+   ctx.moveTo(cx-4*step,cy+i*step);
+   ctx.lineTo(cx+4*step,cy+i*step);
+   ctx.stroke();
+ }
+
+ // Draw snake (head + 2 segments) in Z projection as brighter blue
+ ctx.fillStyle='#0066ff';
+ ctx.strokeStyle='#00aaff';
+ ctx.lineWidth=step*0.25;
+ ctx.lineCap='round';
+ ctx.lineJoin='round';
+
+ // Draw filled circles for each segment
+ for(let i=0;i<Math.min(3,snake3d.length);i++){
+   let s=snake3d[i];
+   let dz=s.z-head.z;
+   let x=cx+dz*step;
+   let y=cy;
+   
+   ctx.beginPath();
+   ctx.arc(x,y,step*0.35,0,Math.PI*2);
+   ctx.fill();
+ }
+ 
+ // Draw connecting lines
+ ctx.beginPath();
+ for(let i=0;i<Math.min(3,snake3d.length);i++){
+   let s=snake3d[i];
+   let dz=s.z-head.z;
+   let x=cx+dz*step;
+   let y=cy;
+   if(i===0) ctx.moveTo(x,y);
+   else ctx.lineTo(x,y);
+ }
+ ctx.stroke();
+
+ // Draw head as brighter circle
+ if(snake3d.length>0){
+   let s=snake3d[0];
+   let dz=s.z-head.z;
+   ctx.fillStyle='#00ccff';
+   ctx.beginPath();
+   ctx.arc(cx+dz*step,cy,step*0.4,0,Math.PI*2);
+   ctx.fill();
+ }
+}
+
+function draw3dCube(zLevel){
+ let ctx=canvas3dCtxs['z'+zLevel];
+ if(!ctx) return;
+ let w=ctx.canvas.width, h=ctx.canvas.height;
+ let step=cellSize3d;
+
+ ctx.fillStyle='#001f3f';
+ ctx.fillRect(0,0,w,h);
+
+ // Draw 2D grid for this Z level
+ ctx.strokeStyle='#1a3a5c';
+ ctx.lineWidth=0.3;
+ for(let i=0;i<=gridSize3d;i++){
+   ctx.beginPath();
+   ctx.moveTo(i*step,0);
+   ctx.lineTo(i*step,h);
+   ctx.stroke();
+   ctx.beginPath();
+   ctx.moveTo(0,i*step);
+   ctx.lineTo(w,i*step);
+   ctx.stroke();
+ }
+
+ // Get snake segments at this Z level
+ let segmentsAtZ=snake3d.filter(s=>s.z===zLevel);
+
+ // Draw snake as thin continuous line in different color (cyan)
+ if(segmentsAtZ.length>1){
+   ctx.strokeStyle='#00ffff'; // Cyan color for cube views
+   ctx.lineWidth=step*0.15;
+   ctx.lineCap='round';
+   ctx.lineJoin='round';
+   ctx.beginPath();
+
+   for(let i=0;i<segmentsAtZ.length;i++){
+     let s=segmentsAtZ[i];
+     let x=s.x*step+step/2;
+     let y=s.y*step+step/2;
+     if(i===0) ctx.moveTo(x,y);
+     else ctx.lineTo(x,y);
+   }
+   ctx.stroke();
+ }
+
+ // Draw head as circle
+ if(segmentsAtZ.length>0){
+   let s=segmentsAtZ[0];
+   ctx.fillStyle='#00ffff';
+   ctx.beginPath();
+   ctx.arc(s.x*step+step/2,s.y*step+step/2,step*0.25,0,Math.PI*2);
+   ctx.fill();
+ }
+
+ // Draw apple if at this Z level
+ if(apple3d && apple3d.z===zLevel){
+   ctx.fillStyle='red';
+   ctx.beginPath();
+   ctx.arc(apple3d.x*step+step/2,apple3d.y*step+step/2,step*0.35,0,Math.PI*2);
+   ctx.fill();
+ }
+}
+
+function draw3dMain(){
+ let ctx=canvas3dCtxs.main3d;
+ let w=ctx.canvas.width, h=ctx.canvas.height;
+ let size=gridSize3d*cellSize3d;
+ 
+ ctx.fillStyle='#001f3f';
+ ctx.fillRect(0,0,w,h);
+ 
+ // Draw isometric-style 3D cube
+ let cx=w/2, cy=h/2;
+ let step=cellSize3d;
+ 
+ // Draw grid lines (back to front)
+ ctx.strokeStyle='#1a3a5c';
+ ctx.lineWidth=0.5;
+ for(let z=0;z<gridSize3d;z++){
+   let offset=z*step*0.3;
+   for(let i=0;i<=gridSize3d;i++){
+     // Horizontal lines
+     ctx.beginPath();
+     ctx.moveTo(cx-size/2+offset, cy-size/2+offset+i*step);
+     ctx.lineTo(cx+size/2+offset, cy-size/2+offset+i*step);
+     ctx.stroke();
+     // Vertical lines
+     ctx.beginPath();
+     ctx.moveTo(cx-size/2+offset+i*step, cy-size/2+offset);
+     ctx.lineTo(cx-size/2+offset+i*step, cy+size/2+offset);
+     ctx.stroke();
+   }
+ }
+ 
+ // Draw snake
+ let snakeColor=document.getElementById('snakeColor').value;
+ let headColor=document.getElementById('headColor').value;
+ snake3d.forEach((s,i)=>{
+   let offset=s.z*step*0.3;
+   let x=cx-size/2+offset+s.x*step;
+   let y=cy-size/2+offset+s.y*step;
+   ctx.fillStyle=i===0?headColor:snakeColor;
+   ctx.fillRect(x-step/2,y-step/2,step-1,step-1);
+ });
+ 
+ // Draw apple
+ let ax=cx-size/2+apple3d.z*step*0.3+apple3d.x*step;
+ let ay=cy-size/2+apple3d.z*step*0.3+apple3d.y*step;
+ ctx.fillStyle='red';
+ ctx.beginPath();
+ ctx.arc(ax,ay,step/3,0,Math.PI*2);
+ ctx.fill();
+ 
+ // Draw bonus
+ if(bonus3d){
+   let bx=cx-size/2+bonus3d.z*step*0.3+bonus3d.x*step;
+   let by=cy-size/2+bonus3d.z*step*0.3+bonus3d.y*step;
+   ctx.fillStyle='orange';
+   ctx.fillRect(bx-step/3,by-step/3,step*0.66,step*0.66);
+ }
+}
+
+function draw3dFollower(){
+ let ctx=canvas3dCtxs.follower;
+ let w=ctx.canvas.width, h=ctx.canvas.height;
+
+ ctx.fillStyle='#001f3f';
+ ctx.fillRect(0,0,w,h);
+
+ // View from 45 degrees behind and above snake head, looking forward
+ let head=snake3d[0];
+ let step=cellSize3d*0.8;
+ let cx=w/2, cy=h/2;
+
+ // Center view on head
+ let offsetX=head.x*step;
+ let offsetY=head.y*step;
+ let offsetZ=head.z*step;
+
+ // Draw grid from this perspective (45 deg from two sides)
+ ctx.strokeStyle='#1a3a5c';
+ ctx.lineWidth=0.5;
+ 
+ // Draw grid lines relative to head position
+ for(let i=0;i<gridSize3d;i++){
+   for(let j=0;j<gridSize3d;j++){
+     let x=cx+(i-head.x)*step*0.707-(j-head.y)*step*0.707;
+     let y=cy-(i-head.x)*step*0.354-(j-head.y)*step*0.354+(head.z)*step*0.5;
+     ctx.fillStyle='#2a4a6c';
+     ctx.fillRect(x-1,y-1,2,2);
+   }
+ }
+
+ // Draw snake segments - head always in center
+ let snakeColor=document.getElementById('snakeColor').value;
+ let headColor=document.getElementById('headColor').value;
+ 
+ snake3d.forEach((s,i)=>{
+   let dx=s.x-head.x;
+   let dy=s.y-head.y;
+   let dz=s.z-head.z;
+   
+   // 45 degree isometric projection
+   let x=cx+dx*step*0.707-dy*step*0.707;
+   let y=cy-dx*step*0.354-dy*step*0.354-dz*step*0.5;
+   
+   let size=step*0.6;
+   ctx.fillStyle=i===0?headColor:snakeColor;
+   ctx.beginPath();
+   ctx.arc(x,y,size*0.5,0,Math.PI*2);
+   ctx.fill();
+ });
+ 
+ // Draw apple relative to head
+ if(apple3d){
+   let dx=apple3d.x-head.x;
+   let dy=apple3d.y-head.y;
+   let dz=apple3d.z-head.z;
+   let ax=cx+dx*step*0.707-dy*step*0.707;
+   let ay=cy-dx*step*0.354-dy*step*0.354-dz*step*0.5;
+   ctx.fillStyle='red';
+   ctx.beginPath();
+   ctx.arc(ax,ay,step*0.35,0,Math.PI*2);
+   ctx.fill();
+ }
+ 
+ // Draw bonus
+ if(bonus3d){
+   let dx=bonus3d.x-head.x;
+   let dy=bonus3d.y-head.y;
+   let dz=bonus3d.z-head.z;
+   let bx=cx+dx*step*0.707-dy*step*0.707;
+   let by=cy-dx*step*0.354-dy*step*0.354-dz*step*0.5;
+   ctx.fillStyle='orange';
+   ctx.beginPath();
+   ctx.arc(bx,by,step*0.4,0,Math.PI*2);
+   ctx.fill();
+ }
+}
+
+function draw3dFace(face){
+ let ctx=canvas3dCtxs[face];
+ if(!ctx) return;
+ let w=ctx.canvas.width, h=ctx.canvas.height;
+ let step=cellSize3d;
+
+ ctx.fillStyle='#001f3f';
+ ctx.fillRect(0,0,w,h);
+
+ // Draw grid
+ ctx.strokeStyle='#1a3a5c';
+ ctx.lineWidth=0.5;
+ for(let i=0;i<=gridSize3d;i++){
+   ctx.beginPath();
+   ctx.moveTo(i*step,0);
+   ctx.lineTo(i*step,h);
+   ctx.stroke();
+   ctx.beginPath();
+   ctx.moveTo(0,i*step);
+   ctx.lineTo(w,i*step);
+   ctx.stroke();
+ }
+
+ // Draw slice based on face
+ let snakeColor=document.getElementById('snakeColor').value;
+ let headColor=document.getElementById('headColor').value;
+
+ let sliceCoord, dim1, dim2, viewDepth;
+ if(face==='front'){ sliceCoord=0; dim1='x'; dim2='y'; viewDepth='z'; }
+ else if(face==='back'){ sliceCoord=gridSize3d-1; dim1='x'; dim2='y'; viewDepth='z'; }
+ else if(face==='left'){ sliceCoord=0; dim1='y'; dim2='z'; viewDepth='x'; }
+ else if(face==='right'){ sliceCoord=gridSize3d-1; dim1='y'; dim2='z'; viewDepth='x'; }
+ else if(face==='top'){ sliceCoord=0; dim1='x'; dim2='z'; viewDepth='y'; }
+ else if(face==='bottom'){ sliceCoord=gridSize3d-1; dim1='x'; dim2='z'; viewDepth='y'; }
+
+ // Find snake segments on this slice
+ snake3d.forEach((s,i)=>{
+   let onSlice=false;
+   if(face==='front'||face==='back') onSlice=(s.z===sliceCoord||(face==='back'&&s.z===sliceCoord));
+   else if(face==='left'||face==='right') onSlice=(s.x===sliceCoord||(face==='right'&&s.x===sliceCoord));
+   else if(face==='top'||face==='bottom') onSlice=(s.y===sliceCoord||(face==='bottom'&&s.y===sliceCoord));
+
+   if(onSlice){
+     let x,y;
+     if(face==='front'||face==='back'){ x=s.x*step; y=s.y*step; }
+     else if(face==='left'||face==='right'){ x=s.z*step; y=s.y*step; }
+     else if(face==='top'||face==='bottom'){ x=s.x*step; y=s.z*step; }
+     
+     // Calculate distance from viewer (through the cube)
+     let depth=s[viewDepth];
+     let maxDepth=gridSize3d-1;
+     let distanceRatio=depth/maxDepth; // 0 = close to wall, 1 = far
+
+     // Calculate distance to nearest wall
+     let distToWall=Math.min(
+       s.x,
+       gridSize3d-1-s.x,
+       s.y,
+       gridSize3d-1-s.y,
+       s.z,
+       gridSize3d-1-s.z
+     );
+     let wallProximity=1-(distToWall/(gridSize3d/2)); // 1 = at wall, 0 = center
+
+     // Adjust color: BRIGHTER with MORE color when close to wall, DARKER when far
+     let baseColor=i===0?headColor:snakeColor;
+     if(wallProximity>0.3){
+       // Mix with brighter color when close to wall
+       let brightenAmount=(wallProximity-0.3)*1.5; // 0 to ~1
+       baseColor=mixColorBright(baseColor,brightenAmount);
+     }
+     
+     // Adjust size: smaller when far
+     let sizeMultiplier=1-(distanceRatio*0.2); // 0.8 to 1.0
+     let segSize=(step-1)*sizeMultiplier;
+     let offset=(step-segSize)/2;
+
+     ctx.fillStyle=baseColor;
+     ctx.fillRect(x+offset,y+offset,segSize,segSize);
+   }
+ });
+
+ // Draw apple if on this slice
+ let appleOnSlice=false;
+ if(face==='front'||face==='back') appleOnSlice=(apple3d.z===sliceCoord||(face==='back'&&apple3d.z===sliceCoord));
+ else if(face==='left'||face==='right') appleOnSlice=(apple3d.x===sliceCoord||(face==='right'&&apple3d.x===sliceCoord));
+ else if(face==='top'||face==='bottom') appleOnSlice=(apple3d.y===sliceCoord||(face==='bottom'&&apple3d.y===sliceCoord));
+
+ if(appleOnSlice){
+   let ax,ay;
+   if(face==='front'||face==='back'){ ax=apple3d.x*step; ay=apple3d.y*step; }
+   else if(face==='left'||face==='right'){ ax=apple3d.z*step; ay=apple3d.y*step; }
+   else if(face==='top'||face==='bottom'){ ax=apple3d.x*step; ay=apple3d.z*step; }
+   ctx.fillStyle='red';
+   ctx.beginPath();
+   ctx.arc(ax+step/2,ay+step/2,step/3,0,Math.PI*2);
+   ctx.fill();
+ }
+}
+
+// Helper function to mix color with brighter version
+function mixColorBright(hexColor,amount){
+ // Parse hex color
+ let r=parseInt(hexColor.slice(1,3),16);
+ let g=parseInt(hexColor.slice(3,5),16);
+ let b=parseInt(hexColor.slice(5,7),16);
+ 
+ // Brighten by increasing RGB values
+ let newR=Math.min(255,Math.round(r+(255-r)*amount));
+ let newG=Math.min(255,Math.round(g+(255-g)*amount));
+ let newB=Math.min(255,Math.round(b+(255-b)*amount));
+ 
+ return '#'+[newR,newG,newB].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+
+function draw3dIsometric(){
+ let ctx=canvas3dCtxs.isometric;
+ if(!ctx) return;
+ let w=ctx.canvas.width, h=ctx.canvas.height;
+ let step=cellSize3d*0.7; // Smaller cells to fit entire snake
+ 
+ ctx.fillStyle='#001f3f';
+ ctx.fillRect(0,0,w,h);
+ 
+ let cx=w/2;
+ let cy=h/2.5;
+ 
+ // Draw grid lines (thin, visible)
+ ctx.strokeStyle='#1a3a5c';
+ ctx.lineWidth=0.5;
+ for(let i=0;i<=gridSize3d;i++){
+   for(let j=0;j<=gridSize3d;j++){
+     for(let k=0;k<=gridSize3d;k++){
+       // Calculate isometric position
+       let x=cx+(i-gridSize3d/2)*step*0.866-(j-gridSize3d/2)*step*0.866;
+       let y=cy+(i-gridSize3d/2)*step*0.5+(j-gridSize3d/2)*step*0.5-(k-gridSize3d/2)*step;
+       
+       // Draw small grid point
+       ctx.fillStyle='#2a4a6c';
+       ctx.fillRect(x-1,y-1,2,2);
+     }
+   }
+ }
+ 
+ // Draw grid lines along axes
+ ctx.strokeStyle='#1a3a5c';
+ ctx.lineWidth=0.3;
+ for(let i=0;i<=gridSize3d;i++){
+   for(let j=0;j<=gridSize3d;j++){
+     // Vertical line
+     let x1=cx+(i-gridSize3d/2)*step*0.866-(j-gridSize3d/2)*step*0.866;
+     let y1=cy+(i-gridSize3d/2)*step*0.5+(j-gridSize3d/2)*step*0.5-(0-gridSize3d/2)*step;
+     let x2=cx+(i-gridSize3d/2)*step*0.866-(j-gridSize3d/2)*step*0.866;
+     let y2=cy+(i-gridSize3d/2)*step*0.5+(j-gridSize3d/2)*step*0.5-(gridSize3d-gridSize3d/2)*step;
+     ctx.beginPath();
+     ctx.moveTo(x1,y1);
+     ctx.lineTo(x2,y2);
+     ctx.stroke();
+   }
+ }
+ 
+ // Draw snake as thin 3D tube/line
+ let snakeColor=document.getElementById('snakeColor').value;
+ let headColor=document.getElementById('headColor').value;
+ 
+ // Draw continuous tube through all segments
+ if(snake3d.length>1){
+   ctx.strokeStyle=headColor;
+   ctx.lineWidth=step*0.25; // Thinner line
+   ctx.lineCap='round';
+   ctx.lineJoin='round';
+   
+   ctx.beginPath();
+   let first=snake3d[0];
+   let x=cx+(first.x-gridSize3d/2)*step*0.866-(first.y-gridSize3d/2)*step*0.866;
+   let y=cy+(first.x-gridSize3d/2)*step*0.5+(first.y-gridSize3d/2)*step*0.5-(first.z-gridSize3d/2)*step;
+   ctx.moveTo(x,y);
+   
+   for(let i=1;i<snake3d.length;i++){
+     let s=snake3d[i];
+     x=cx+(s.x-gridSize3d/2)*step*0.866-(s.y-gridSize3d/2)*step*0.866;
+     y=cy+(s.x-gridSize3d/2)*step*0.5+(s.y-gridSize3d/2)*step*0.5-(s.z-gridSize3d/2)*step;
+     ctx.lineTo(x,y);
+   }
+   ctx.stroke();
+ }
+ 
+ // Draw head as slightly larger circle
+ if(snake3d.length>0){
+   let head=snake3d[0];
+   let hx=cx+(head.x-gridSize3d/2)*step*0.866-(head.y-gridSize3d/2)*step*0.866;
+   let hy=cy+(head.x-gridSize3d/2)*step*0.5+(head.y-gridSize3d/2)*step*0.5-(head.z-gridSize3d/2)*step;
+   
+   ctx.fillStyle=headColor;
+   ctx.beginPath();
+   ctx.arc(hx,hy,step*0.2,0,Math.PI*2);
+   ctx.fill();
+ }
+ 
+ // Draw apple
+ if(apple3d){
+   let ax=cx+(apple3d.x-gridSize3d/2)*step*0.866-(apple3d.y-gridSize3d/2)*step*0.866;
+   let ay=cy+(apple3d.x-gridSize3d/2)*step*0.5+(apple3d.y-gridSize3d/2)*step*0.5-(apple3d.z-gridSize3d/2)*step;
+   ctx.fillStyle='red';
+   ctx.beginPath();
+   ctx.arc(ax,ay,step*0.25,0,Math.PI*2);
+   ctx.fill();
+ }
+ 
+ // Draw bonus
+ if(bonus3d){
+   let bx=cx+(bonus3d.x-gridSize3d/2)*step*0.866-(bonus3d.y-gridSize3d/2)*step*0.866;
+   let by=cy+(bonus3d.x-gridSize3d/2)*step*0.5+(bonus3d.y-gridSize3d/2)*step*0.5-(bonus3d.z-gridSize3d/2)*step;
+   ctx.fillStyle='orange';
+   ctx.beginPath();
+   ctx.arc(bx,by,step*0.3,0,Math.PI*2);
+   ctx.fill();
+ }
+}
+
+// Layout Manager Functions
+function openLayoutManager(){
+ let list=document.getElementById('layoutItemsList');
+ list.innerHTML='';
+
+ const labels={
+   main3d:'🎯 מבט ראשי 3D',
+   follower:'👁️ מעקב אחרי ראש',
+   front:'⬆️ חזית',
+   back:'⬇️ אחור',
+   left:'◀️ שמאל',
+   right:'▶️ ימין',
+   top:'🔼 עליון',
+   bottom:'🔽 תחתון',
+   isometric:'🔶 איזומטרי (שפיץ עליון)'
+ };
+
+ for(let view in layoutConfig){
+   let item=document.createElement('div');
+   item.className='layout-item';
+   item.innerHTML=`
+     <label>${labels[view]||view}</label>
+     <input type="checkbox" ${layoutConfig[view].visible?'checked':''} onchange="layoutConfig.${view}.visible=this.checked">
+     <input type="number" value="${layoutConfig[view].order}" min="0" max="7" onchange="layoutConfig.${view}.order=parseInt(this.value)">
+   `;
+   list.appendChild(item);
+ }
+ 
+ document.getElementById('layoutManagerModal').classList.add('visible');
+}
+
+function closeLayoutManager(){
+ document.getElementById('layoutManagerModal').classList.remove('visible');
+}
+
+function saveLayoutManager(){
+ applyLayoutConfig();
+ closeLayoutManager();
+ pushRuntimeChangelog('נשמר סידור לוחות 3D','layoutSave',0);
+}
+
+function applyLayoutConfig(){
+ for(let view in layoutConfig){
+   let panel=document.querySelector(`.view-panel[data-view="${view}"]`);
+   if(panel){
+     panel.style.setProperty('--order-'+view, layoutConfig[view].order);
+     panel.classList.toggle('hidden', !layoutConfig[view].visible);
+   }
+ }
+}
+
+// ========== INTERACTIVE 3D (Three.js) FUNCTIONS ==========
+
+function toggleInteractive3d(){
+ isInteractive3d=!isInteractive3d;
+ let btn=document.getElementById('btnInteractive3d');
+ let container=document.getElementById('interactive3dContainer');
+
+ if(isInteractive3d){
+   btn.textContent='🎯 סגור מצב תלת מימדי אינטראקטיבי';
+   btn.classList.add('active');
+   container.style.display='block';
+   initInteractive3d();
+   if(snake3d.length>0){
+     syncInteractive3d();
+   } else {
+     startGame3d();
+   }
+ } else {
+   btn.textContent='🎯 פתח מצב תלת מימדי אינטראקטיבי';
+   btn.classList.remove('active');
+   container.style.display='none';
+   cleanupInteractive3d();
+ }
+ pushRuntimeChangelog('מצב 3D אינטראקטיבי: '+(isInteractive3d?'פעיל':'כבוי'),'interactive3d',0);
+}
+
+function initInteractive3d(){
+ const container=document.getElementById('interactive3dCanvas');
+ const width=container.clientWidth||600;
+ const height=500;
+
+ // Scene
+ interactiveScene=new THREE.Scene();
+ interactiveScene.background=new THREE.Color(0x001f3f);
+
+ // Camera
+ const aspect=width/height;
+ interactiveCamera=new THREE.PerspectiveCamera(60,aspect,0.1,1000);
+ interactiveCamera.position.set(30,30,30);
+ interactiveCamera.lookAt(0,0,0);
+
+ // Renderer
+ interactiveRenderer=new THREE.WebGLRenderer({antialias:true});
+ interactiveRenderer.setSize(width,height);
+ container.innerHTML='';
+ container.appendChild(interactiveRenderer.domElement);
+
+ // Create cube group (rotates with mouse)
+ cubeGroup=new THREE.Group();
+ interactiveScene.add(cubeGroup);
+
+ // Grid helper
+ const gridHelper=new THREE.GridHelper(gridSize3d*cellSize3d,gridSize3d,0x1a3a5c,0x1a3a5c);
+ gridHelper.position.set(-gridSize3d*cellSize3d/2,-gridSize3d*cellSize3d/2,-gridSize3d*cellSize3d/2);
+ cubeGroup.add(gridHelper);
+
+ // Wireframe box
+ const boxGeometry=new THREE.BoxGeometry(gridSize3d*cellSize3d,gridSize3d*cellSize3d,gridSize3d*cellSize3d);
+ const boxEdges=new THREE.EdgesGeometry(boxGeometry);
+ const boxLine=new THREE.LineSegments(boxEdges,new THREE.LineBasicMaterial({color:0x3a6a9c}));
+ boxLine.position.set(0,0,0);
+ cubeGroup.add(boxLine);
+
+ // Lights
+ const ambientLight=new THREE.AmbientLight(0xffffff,0.6);
+ interactiveScene.add(ambientLight);
+
+ const directionalLight=new THREE.DirectionalLight(0xffffff,0.8);
+ directionalLight.position.set(10,20,10);
+ interactiveScene.add(directionalLight);
+
+ // Mouse drag controls
+ const canvas=interactiveRenderer.domElement;
+ canvas.addEventListener('mousedown',onDragStart);
+ canvas.addEventListener('mousemove',onDragMove);
+ canvas.addEventListener('mouseup',onDragEnd);
+ canvas.addEventListener('mouseleave',onDragEnd);
+
+ // Touch support
+ canvas.addEventListener('touchstart',onTouchStart,{passive:false});
+ canvas.addEventListener('touchmove',onTouchMove,{passive:false});
+ canvas.addEventListener('touchend',onDragEnd);
+
+ // Initial render
+ animateInteractive3d();
+}
+
+function onDragStart(e){
+ isDragging=true;
+ previousMousePosition={x:e.clientX,y:e.clientY};
+}
+
+function onDragMove(e){
+ if(!isDragging) return;
+ const deltaX=e.clientX-previousMousePosition.x;
+ const deltaY=e.clientY-previousMousePosition.y;
+
+ cubeGroup.rotation.y+=deltaX*rotationSpeed;
+ cubeGroup.rotation.x+=deltaY*rotationSpeed;
+
+ previousMousePosition={x:e.clientX,y:e.clientY};
+}
+
+function onDragEnd(){
+ isDragging=false;
+}
+
+function onTouchStart(e){
+ e.preventDefault();
+ isDragging=true;
+ previousMousePosition={x:e.touches[0].clientX,y:e.touches[0].clientY};
+}
+
+function onTouchMove(e){
+ e.preventDefault();
+ if(!isDragging) return;
+ const deltaX=e.touches[0].clientX-previousMousePosition.x;
+ const deltaY=e.touches[0].clientY-previousMousePosition.y;
+ 
+ cubeGroup.rotation.y+=deltaX*rotationSpeed;
+ cubeGroup.rotation.x+=deltaY*rotationSpeed;
+ 
+ previousMousePosition={x:e.touches[0].clientX,y:e.touches[0].clientY};
+}
+
+function animateInteractive3d(){
+ requestAnimationFrame(animateInteractive3d);
+ if(interactiveRenderer&&interactiveScene&&interactiveCamera){
+   interactiveRenderer.render(interactiveScene,interactiveCamera);
+ }
+}
+
+function syncInteractive3d(){
+ if(!cubeGroup) return;
+ 
+ // Clear old meshes
+ while(cubeGroup.children.length>0){
+   const child=cubeGroup.children[0];
+   if(child.type==='Mesh'){
+     cubeGroup.remove(child);
+     if(child.geometry) child.geometry.dispose();
+     if(child.material) child.material.dispose();
+   } else {
+   break;
+   }
+ }
+ 
+ // Add grid back
+ const gridHelper=new THREE.GridHelper(gridSize3d*cellSize3d,gridSize3d,0x1a3a5c,0x1a3a5c);
+ gridHelper.position.set(-gridSize3d*cellSize3d/2,-gridSize3d*cellSize3d/2,-gridSize3d*cellSize3d/2);
+ cubeGroup.add(gridHelper);
+ 
+ // Wireframe box
+ const boxGeometry=new THREE.BoxGeometry(gridSize3d*cellSize3d,gridSize3d*cellSize3d,gridSize3d*cellSize3d);
+ const boxEdges=new THREE.EdgesGeometry(boxGeometry);
+ const boxLine=new THREE.LineSegments(boxEdges,new THREE.LineBasicMaterial({color:0x3a6a9c}));
+ boxLine.position.set(0,0,0);
+ cubeGroup.add(boxLine);
+ 
+ // Draw snake
+ const snakeColor=document.getElementById('snakeColor').value;
+ const headColor=document.getElementById('headColor').value;
+ 
+ snake3d.forEach((segment,i)=>{
+   const size=cellSize3d*0.8;
+   const geometry=new THREE.BoxGeometry(size,size,size);
+   const material=new THREE.MeshLambertMaterial({color:i===0?headColor:snakeColor});
+   const mesh=new THREE.Mesh(geometry,material);
+   
+   mesh.position.set(
+     segment.x*cellSize3d-gridSize3d*cellSize3d/2,
+     segment.y*cellSize3d-gridSize3d*cellSize3d/2,
+     segment.z*cellSize3d-gridSize3d*cellSize3d/2
+   );
+   
+   cubeGroup.add(mesh);
+ });
+ 
+ // Draw apple
+ if(apple3d){
+   const geometry=new THREE.SphereGeometry(cellSize3d*0.4,16,16);
+   const material=new THREE.MeshLambertMaterial({color:0xff0000});
+   appleMesh=new THREE.Mesh(geometry,material);
+   appleMesh.position.set(
+     apple3d.x*cellSize3d-gridSize3d*cellSize3d/2+cellSize3d/2,
+     apple3d.y*cellSize3d-gridSize3d*cellSize3d/2+cellSize3d/2,
+     apple3d.z*cellSize3d-gridSize3d*cellSize3d/2+cellSize3d/2
+   );
+   cubeGroup.add(appleMesh);
+ }
+ 
+ // Draw bonus
+ if(bonus3d){
+   const geometry=new THREE.BoxGeometry(cellSize3d*0.6,cellSize3d*0.6,cellSize3d*0.6);
+   const material=new THREE.MeshLambertMaterial({color:0xffa500});
+   bonusMesh=new THREE.Mesh(geometry,material);
+   bonusMesh.position.set(
+     bonus3d.x*cellSize3d-gridSize3d*cellSize3d/2+cellSize3d/2,
+     bonus3d.y*cellSize3d-gridSize3d*cellSize3d/2+cellSize3d/2,
+     bonus3d.z*cellSize3d-gridSize3d*cellSize3d/2+cellSize3d/2
+   );
+   cubeGroup.add(bonusMesh);
+ }
+}
+
+function cleanupInteractive3d(){
+ if(interactiveRenderer){
+   interactiveRenderer.dispose();
+   interactiveRenderer=null;
+ }
+ if(interactiveScene){
+   interactiveScene.clear();
+   interactiveScene=null;
+ }
+ snakeMeshes=[];
+ appleMesh=null;
+ bonusMesh=null;
+ cubeGroup=null;
+}
+
+// ========== 4D MODE FUNCTIONS ==========
+
+function toggleManualStepMode(){
+ manualStepMode=!manualStepMode;
+ let btn=document.getElementById('btnManualStepToggle');
+ btn.textContent=manualStepMode?'👆 התקדמות ידנית (פעיל)':'👆 התקדמות ידנית (כבוי)';
+ btn.classList.toggle('active',manualStepMode);
+ pushRuntimeChangelog('התקדמות ידנית: '+(manualStepMode?'פעיל':'כבוי'),'manualStep',0);
+}
+
+function init4dCanvases(){
+ canvas4dCtxs.hypercube=document.getElementById('canvasHypercube').getContext('2d');
+ canvas4dCtxs.w0=document.getElementById('canvasW0').getContext('2d');
+ canvas4dCtxs.w1=document.getElementById('canvasW1').getContext('2d');
+ canvas4dCtxs.w2=document.getElementById('canvasW2').getContext('2d');
+ canvas4dCtxs.w3=document.getElementById('canvasW3').getContext('2d');
+ canvas4dCtxs.xy=document.getElementById('canvasXY').getContext('2d');
+ canvas4dCtxs.zw=document.getElementById('canvasZW').getContext('2d');
+ canvas4dCtxs.xz=document.getElementById('canvasXZ').getContext('2d');
+ canvas4dCtxs.yw=document.getElementById('canvasYW').getContext('2d');
+ canvas4dCtxs.follower=document.getElementById('canvasFollower4d').getContext('2d');
+ canvas4dCtxs.follower4d=document.getElementById('canvasFollower4dClose').getContext('2d');
+ canvas4dCtxs.follower2=document.getElementById('canvasFollower4d2').getContext('2d');
+ canvas4dCtxs.cube0=document.getElementById('canvasCube0').getContext('2d');
+ canvas4dCtxs.cube1=document.getElementById('canvasCube1').getContext('2d');
+ canvas4dCtxs.cube2=document.getElementById('canvasCube2').getContext('2d');
+ canvas4dCtxs.cube3=document.getElementById('canvasCube3').getContext('2d');
+ canvas4dCtxs.cube4=document.getElementById('canvasCube4').getContext('2d');
+ canvas4dCtxs.cube5=document.getElementById('canvasCube5').getContext('2d');
+ canvas4dCtxs.cube6=document.getElementById('canvasCube6').getContext('2d');
+ canvas4dCtxs.cube7=document.getElementById('canvasCube7').getContext('2d');
+
+ const hyperSize=gridSize4d*cellSize4d*2.5;
+ const smallSize=gridSize4d*cellSize4d;
+
+ document.getElementById('canvasHypercube').width=hyperSize;
+ document.getElementById('canvasHypercube').height=hyperSize;
+ document.getElementById('canvasW0').width=smallSize;
+ document.getElementById('canvasW0').height=smallSize;
+ document.getElementById('canvasW1').width=smallSize;
+ document.getElementById('canvasW1').height=smallSize;
+ document.getElementById('canvasW2').width=smallSize;
+ document.getElementById('canvasW2').height=smallSize;
+ document.getElementById('canvasW3').width=smallSize;
+ document.getElementById('canvasW3').height=smallSize;
+ document.getElementById('canvasXY').width=smallSize;
+ document.getElementById('canvasXY').height=smallSize;
+ document.getElementById('canvasZW').width=smallSize;
+ document.getElementById('canvasZW').height=smallSize;
+ document.getElementById('canvasXZ').width=smallSize;
+ document.getElementById('canvasXZ').height=smallSize;
+ document.getElementById('canvasYW').width=smallSize;
+ document.getElementById('canvasYW').height=smallSize;
+ document.getElementById('canvasFollower4d').width=smallSize*1.3;
+ document.getElementById('canvasFollower4d').height=smallSize*1.3;
+ document.getElementById('canvasFollower4dClose').width=smallSize*1.5;
+ document.getElementById('canvasFollower4dClose').height=smallSize*1.5;
+ document.getElementById('canvasFollower4d2').width=smallSize*1.3;
+ document.getElementById('canvasFollower4d2').height=smallSize*1.3;
+ for(let i=0;i<=7;i++){
+   let c=document.getElementById('canvasCube'+i);
+   if(c){ c.width=smallSize; c.height=smallSize; }
+ }
+}
+
+function startGame4d(){
+ snake4d=[];
+ for(let i=0;i<4;i++) snake4d.push({x:4-i,y:4,z:4,w:4});
+ dir4d={x:1,y:0,z:0,w:0};
+ score=0;
+ updateScore();
+ spawnApple4d();
+ bonus4d=null;
+ paused=false;
+ updatePauseButtonLabel();
+ setSpeed();
+ pushRuntimeChangelog('התחל משחק 4D','restart4d',280);
+}
+
+function spawnApple4d(){
+ let pos;
+ do{
+   pos={
+     x:Math.floor(Math.random()*gridSize4d),
+     y:Math.floor(Math.random()*gridSize4d),
+     z:Math.floor(Math.random()*gridSize4d),
+     w:Math.floor(Math.random()*gridSize4d)
+   };
+ } while(snake4d.some(s=>s.x===pos.x && s.y===pos.y && s.z===pos.z && s.w===pos.w));
+ apple4d=pos;
+}
+
+function spawnBonus4d(){
+ let pos;
+ do{
+   pos={
+     x:Math.floor(Math.random()*gridSize4d),
+     y:Math.floor(Math.random()*gridSize4d),
+     z:Math.floor(Math.random()*gridSize4d),
+     w:Math.floor(Math.random()*gridSize4d)
+   };
+ } while(snake4d.some(s=>s.x===pos.x && s.y===pos.y && s.z===pos.z && s.w===pos.w) || (apple4d && pos.x===apple4d.x && pos.y===apple4d.y && pos.z===apple4d.z && pos.w===apple4d.w));
+ bonus4d=pos;
+ bonusValue=18;
+ bonusTimer=60;
+}
+
+function getDirs4d(){
+ let diagonal=document.getElementById('diagonalMode').checked;
+ let dirs=[[1,0,0,0],[-1,0,0,0],[0,1,0,0],[0,-1,0,0],[0,0,1,0],[0,0,-1,0],[0,0,0,1],[0,0,0,-1]];
+ if(diagonal){
+   // Add some diagonal directions in 4D
+   dirs.push([1,1,0,0],[1,-1,0,0],[-1,1,0,0],[-1,-1,0,0]);
+   dirs.push([1,0,1,0],[1,0,-1,0],[-1,0,1,0],[-1,0,-1,0]);
+   dirs.push([1,0,0,1],[1,0,0,-1],[-1,0,0,1],[-1,0,0,-1]);
+   dirs.push([0,1,1,0],[0,1,-1,0],[0,-1,1,0],[0,-1,-1,0]);
+   dirs.push([0,1,0,1],[0,1,0,-1],[0,-1,0,1],[0,-1,0,-1]);
+   dirs.push([0,0,1,1],[0,0,1,-1],[0,0,-1,1],[0,0,-1,-1]);
+ }
+ return dirs;
+}
+
+function isValidPos4d(pos){
+ if(pos.x<0||pos.y<0||pos.z<0||pos.w<0||pos.x>=gridSize4d||pos.y>=gridSize4d||pos.z>=gridSize4d||pos.w>=gridSize4d) return false;
+ return !snake4d.some(s=>s.x===pos.x && s.y===pos.y && s.z===pos.z && s.w===pos.w);
+}
+
+function gameLoop4d(){
+ if(paused) return;
+
+ let isAuto=document.getElementById('autoToggle').checked;
+ let aiMode=document.getElementById('aiMode').value;
+ let lessFailMode=document.getElementById('noFail').checked;
+
+ // Manual step mode
+ if(manualStepMode && pendingDir){
+   dir4d={...pendingDir};
+   pendingDir=null;
+ } else if(manualStepMode){
+   return; // Wait for key press
+ } else if(isAuto){
+   dir4d=getAI4d(aiMode);
+ }
+
+ let head={x:snake4d[0].x+dir4d.x, y:snake4d[0].y+dir4d.y, z:snake4d[0].z+dir4d.z, w:snake4d[0].w+dir4d.w};
+ let fail=!isValidPos4d(head);
+ 
+ if(fail && lessFailMode){
+   let dirs=getDirs4d();
+   for(let d of dirs){
+     let nx=snake4d[0].x+d[0], ny=snake4d[0].y+d[1], nz=snake4d[0].z+d[2], nw=snake4d[0].w+d[3];
+     if(isValidPos4d({x:nx,y:ny,z:nz,w:nw})){
+       dir4d={x:d[0],y:d[1],z:d[2],w:d[3]};
+       head={x:nx,y:ny,z:nz,w:nw};
+       fail=false;
+       break;
+     }
+   }
+ }
+ 
+ if(fail){
+   endGame('נגמר המשחק (4D)');
+   return;
+ }
+ 
+ snake4d.unshift(head);
+
+ let ateApple=(head.x===apple4d.x && head.y===apple4d.y && head.z===apple4d.z && head.w===apple4d.w);
+ let ateBonus=bonus4d && (head.x===bonus4d.x && head.y===bonus4d.y && head.z===bonus4d.z && head.w===bonus4d.w);
+
+ if(ateApple){
+   score++;
+   updateScore();
+   spawnApple4d();
+   if(score%6===0) spawnBonus4d();
+ } else if(ateBonus){
+   // Bonus: only increase score, don't grow snake
+   score+=bonusValue;
+   updateScore();
+   bonus4d=null;
+   snake4d.pop(); // Still pop to maintain length
+ } else {
+   snake4d.pop();
+ }
+ 
+ if(bonus4d){
+   bonusTimer--;
+   if(bonusTimer%10===0){
+     bonusValue-=3;
+     if(bonusValue<=0) bonus4d=null;
+   }
+ }
+ 
+ if(snake4d.length>=gridSize4d*gridSize4d*gridSize4d*gridSize4d-2){
+   endGame('כל הכבוד! (4D)');
+   return;
+ }
+ 
+ draw4d();
+ 
+ // Sync interactive 3D view if active
+ if(isInteractive3d){
+   syncInteractive3d();
+ }
+}
+
+function getAI4d(aiMode){
+ let target=bonus4d||apple4d;
+ let dirs=getDirs4d();
+ let valid=dirs.filter(d=>{
+   let nx=snake4d[0].x+d[0], ny=snake4d[0].y+d[1], nz=snake4d[0].z+d[2], nw=snake4d[0].w+d[3];
+   return isValidPos4d({x:nx,y:ny,z:nz,w:nw});
+ });
+ 
+ if(valid.length===0) return dir4d;
+ 
+ // Sort by distance to target
+ valid.sort((a,b)=>{
+   let ax=snake4d[0].x+a[0], ay=snake4d[0].y+a[1], az=snake4d[0].z+a[2], aw=snake4d[0].w+a[3];
+   let bx=snake4d[0].x+b[0], by=snake4d[0].y+b[1], bz=snake4d[0].z+b[2], bw=snake4d[0].w+b[3];
+   let da=Math.abs(ax-target.x)+Math.abs(ay-target.y)+Math.abs(az-target.z)+Math.abs(aw-target.w);
+   let db=Math.abs(bx-target.x)+Math.abs(by-target.y)+Math.abs(bz-target.z)+Math.abs(bw-target.w);
+   return da-db;
+ });
+ 
+ return {x:valid[0][0], y:valid[0][1], z:valid[0][2], w:valid[0][3]};
+}
+
+function draw4d(){
+ if(canvas4dCtxs.hypercube) draw4dHypercube();
+ if(canvas4dCtxs.w0) draw4dSlice('w',0);
+ if(canvas4dCtxs.w1) draw4dSlice('w',1);
+ if(canvas4dCtxs.w2) draw4dSlice('w',2);
+ if(canvas4dCtxs.w3) draw4dSlice('w',3);
+ if(canvas4dCtxs.xy) draw4dPlane('xy');
+ if(canvas4dCtxs.zw) draw4dPlane('zw');
+ if(canvas4dCtxs.xz) draw4dPlane('xz');
+ if(canvas4dCtxs.yw) draw4dPlane('yw');
+ if(canvas4dCtxs.follower) draw4dFollower();
+ if(canvas4dCtxs.follower4d) draw4dFollowerClose();
+ if(canvas4dCtxs.follower2) draw4dFollower2();
+ if(canvas4dCtxs.cube0) draw4dCube(0);
+ if(canvas4dCtxs.cube1) draw4dCube(1);
+ if(canvas4dCtxs.cube2) draw4dCube(2);
+ if(canvas4dCtxs.cube3) draw4dCube(3);
+ if(canvas4dCtxs.cube4) draw4dCube(4);
+ if(canvas4dCtxs.cube5) draw4dCube(5);
+ if(canvas4dCtxs.cube6) draw4dCube(6);
+ if(canvas4dCtxs.cube7) draw4dCube(7);
+}
+
+function draw4dHypercube(){
+ let ctx=canvas4dCtxs.hypercube;
+ if(!ctx) return;
+ let w=ctx.canvas.width, h=ctx.canvas.height;
+ let step=cellSize4d*1.5;
+ 
+ ctx.fillStyle='#001f3f';
+ ctx.fillRect(0,0,w,h);
+ 
+ let cx=w/2;
+ let cy=h/2;
+ 
+ // Draw 4D hypercube as tesseract-like projection
+ // Two 3D cubes connected at corners, with perspective
+ 
+ // Outer cube (larger, W=0)
+ let outerSize=gridSize4d*step*0.6;
+ let innerSize=outerSize*0.5;
+ 
+ // Draw outer cube edges
+ ctx.strokeStyle='#3a5a7c';
+ ctx.lineWidth=1;
+ drawCube(ctx,cx,cy,outerSize,0);
+ 
+ // Draw inner cube edges
+ ctx.strokeStyle='#2a4a6c';
+ drawCube(ctx,cx,cy,innerSize,0);
+ 
+ // Draw connecting edges between cubes (4D dimension)
+ ctx.strokeStyle='#4a6a8c';
+ ctx.lineWidth=0.5;
+ let corners=[[-1,-1],[-1,1],[1,-1],[1,1]];
+ for(let c of corners){
+   let x1=cx+c[0]*outerSize*0.5;
+   let y1=cy+c[1]*outerSize*0.5;
+   let x2=cx+c[0]*innerSize*0.5;
+   let y2=cy+c[1]*innerSize*0.5;
+   ctx.beginPath();
+   ctx.moveTo(x1,y1);
+   ctx.lineTo(x2,y2);
+   ctx.stroke();
+ }
+ 
+ // Draw grid points at different W levels
+ ctx.fillStyle='#1a3a5c';
+ for(let wi=0;wi<gridSize4d;wi++){
+   let wFactor=(wi-gridSize4d/2)/gridSize4d;
+   let wScale=1-Math.abs(wFactor)*0.5;
+   let size=outerSize*wScale;
+   
+   for(let i=0;i<=gridSize4d;i++){
+     for(let j=0;j<=gridSize4d;j++){
+       let x=cx+(i-gridSize4d/2)*step*wScale;
+       let y=cy+(j-gridSize4d/2)*step*wScale;
+       ctx.fillRect(x-1,y-1,2,2);
+     }
+   }
+ }
+ 
+ // Draw snake as continuous thin 4D tube projection
+ let snakeColor=document.getElementById('snakeColor').value;
+ let headColor=document.getElementById('headColor').value;
+ 
+ if(snake4d.length>1){
+   ctx.strokeStyle=headColor;
+   ctx.lineWidth=step*0.12;
+   ctx.lineCap='round';
+   ctx.lineJoin='round';
+   
+   ctx.beginPath();
+   let first=snake4d[0];
+   let pos=project4Dto2D(first,cx,cy,step);
+   ctx.moveTo(pos.x,pos.y);
+   
+   for(let i=1;i<snake4d.length;i++){
+     pos=project4Dto2D(snake4d[i],cx,cy,step);
+     ctx.lineTo(pos.x,pos.y);
+   }
+   ctx.stroke();
+ }
+ 
+ // Draw head
+ if(snake4d.length>0){
+   let head=snake4d[0];
+   let pos=project4Dto2D(head,cx,cy,step);
+   ctx.fillStyle=headColor;
+   ctx.beginPath();
+   ctx.arc(pos.x,pos.y,step*0.2,0,Math.PI*2);
+   ctx.fill();
+ }
+ 
+ // Draw apple
+ if(apple4d){
+   let pos=project4Dto2D(apple4d,cx,cy,step);
+   ctx.fillStyle='red';
+   ctx.beginPath();
+   ctx.arc(pos.x,pos.y,step*0.25,0,Math.PI*2);
+   ctx.fill();
+ }
+ 
+ // Draw bonus
+ if(bonus4d){
+   let pos=project4Dto2D(bonus4d,cx,cy,step);
+   ctx.fillStyle='orange';
+   ctx.beginPath();
+   ctx.arc(pos.x,pos.y,step*0.3,0,Math.PI*2);
+   ctx.fill();
+ }
+}
+
+function drawCube(ctx,cx,cy,size,rotation){
+ // Draw a 3D cube in isometric view
+ let points=[];
+ for(let x of[-1,1]){
+   for(let y of[-1,1]){
+     for(let z of[-1,1]){
+       points.push({
+         x:cx+x*size*0.433,
+         y:cy+y*size*0.5+z*size*0.25
+       });
+     }
+   }
+ }
+ 
+ // Draw edges
+ let edges=[
+   [0,1],[2,3],[4,5],[6,7], // vertical
+   [0,2],[1,3],[4,6],[5,7], // horizontal
+   [0,4],[1,5],[2,6],[3,7]  // depth
+ ];
+ 
+ for(let e of edges){
+   ctx.beginPath();
+   ctx.moveTo(points[e[0]].x,points[e[0]].y);
+   ctx.lineTo(points[e[1]].x,points[e[1]].y);
+   ctx.stroke();
+ }
+}
+
+function project4Dto2D(pos,cx,cy,step){
+ // Simple 4D to 2D projection with perspective
+ let wFactor=1-(pos.w-gridSize4d/2)*0.15;
+ let x=cx+(pos.x-gridSize4d/2)*step*0.866*wFactor-(pos.y-gridSize4d/2)*step*0.866*wFactor+(pos.w-gridSize4d/2)*step*0.3;
+ let y=cy+(pos.x-gridSize4d/2)*step*0.5*wFactor+(pos.y-gridSize4d/2)*step*0.5*wFactor-(pos.z-gridSize4d/2)*step*wFactor;
+ return {x,y};
+}
+
+function draw4dSlice(axis,value){
+ let ctx=canvas4dCtxs[axis+value];
+ if(!ctx) return;
+ let w=ctx.canvas.width, h=ctx.canvas.height;
+ let step=cellSize4d;
+ 
+ ctx.fillStyle='#001f3f';
+ ctx.fillRect(0,0,w,h);
+ 
+ // Draw grid
+ ctx.strokeStyle='#1a3a5c';
+ ctx.lineWidth=0.5;
+ for(let i=0;i<=gridSize4d;i++){
+   ctx.beginPath();
+   ctx.moveTo(i*step,0);
+   ctx.lineTo(i*step,h);
+   ctx.stroke();
+   ctx.beginPath();
+   ctx.moveTo(0,i*step);
+   ctx.lineTo(w,i*step);
+   ctx.stroke();
+ }
+ 
+ let snakeColor=document.getElementById('snakeColor').value;
+ let headColor=document.getElementById('headColor').value;
+
+ // Get snake segments on this W slice
+ let segments=snake4d.filter(s=>s.w===value);
+ 
+ if(segments.length>1){
+   // Draw as thin continuous line
+   ctx.strokeStyle=headColor;
+   ctx.lineWidth=step*0.15;
+   ctx.lineCap='round';
+   ctx.lineJoin='round';
+   ctx.beginPath();
+   
+   for(let i=0;i<segments.length;i++){
+     let s=segments[i];
+     let x=s.x*step+step/2;
+     let y=s.y*step+step/2;
+     
+     if(i===0){
+       ctx.moveTo(x,y);
+     } else {
+       ctx.lineTo(x,y);
+     }
+   }
+   ctx.stroke();
+ }
+
+ // Draw head if on this slice
+ if(segments.length>0){
+   let s=segments[0];
+   ctx.fillStyle=headColor;
+   ctx.beginPath();
+   ctx.arc(s.x*step+step/2,s.y*step+step/2,step*0.25,0,Math.PI*2);
+   ctx.fill();
+ }
+
+ // Draw apple if on this slice
+ if(apple4d && apple4d.w===value){
+   ctx.fillStyle='red';
+   ctx.beginPath();
+   ctx.arc(apple4d.x*step+step/2,apple4d.y*step+step/2,step*0.3,0,Math.PI*2);
+   ctx.fill();
+ }
+
+ // Draw bonus if on this slice
+ if(bonus4d && bonus4d.w===value){
+   ctx.fillStyle='orange';
+   ctx.beginPath();
+   ctx.arc(bonus4d.x*step+step/2,bonus4d.y*step+step/2,step*0.35,0,Math.PI*2);
+   ctx.fill();
+ }
+}
+
+function draw4dPlane(plane){
+ let ctx=canvas4dCtxs[plane];
+ if(!ctx) return;
+ let w=ctx.canvas.width, h=ctx.canvas.height;
+ let step=cellSize4d;
+
+ ctx.fillStyle='#001f3f';
+ ctx.fillRect(0,0,w,h);
+
+ // Draw grid
+ ctx.strokeStyle='#1a3a5c';
+ ctx.lineWidth=0.5;
+ for(let i=0;i<=gridSize4d;i++){
+   ctx.beginPath();
+   ctx.moveTo(i*step,0);
+   ctx.lineTo(i*step,h);
+   ctx.stroke();
+   ctx.beginPath();
+   ctx.moveTo(0,i*step);
+   ctx.lineTo(w,i*step);
+   ctx.stroke();
+ }
+
+ // Draw snake as thin continuous line in cyan
+ ctx.strokeStyle='#00ffff';
+ ctx.lineWidth=step*0.15;
+ ctx.lineCap='round';
+ ctx.lineJoin='round';
+ ctx.beginPath();
+
+ let started=false;
+ for(let i=0;i<snake4d.length;i++){
+   let s=snake4d[i];
+   let x,y;
+   if(plane==='xy'){ x=s.x; y=s.y; }
+   else if(plane==='zw'){ x=s.z; y=s.w; }
+   else if(plane==='xz'){ x=s.x; y=s.z; }
+   else if(plane==='yw'){ x=s.y; y=s.w; }
+
+   x=x*step+step/2;
+   y=y*step+step/2;
+
+   if(!started){
+     ctx.moveTo(x,y);
+     started=true;
+   } else {
+     ctx.lineTo(x,y);
+   }
+ }
+ ctx.stroke();
+
+ // Draw head
+ if(snake4d.length>0){
+   let s=snake4d[0];
+   let x,y;
+   if(plane==='xy'){ x=s.x; y=s.y; }
+   else if(plane==='zw'){ x=s.z; y=s.w; }
+   else if(plane==='xz'){ x=s.x; y=s.z; }
+   else if(plane==='yw'){ x=s.y; y=s.w; }
+
+   ctx.fillStyle='#00ffff';
+   ctx.beginPath();
+   ctx.arc(x*step+step/2,y*step+step/2,step*0.25,0,Math.PI*2);
+   ctx.fill();
+ }
+
+ // Draw apple
+ if(apple4d){
+   let x,y;
+   if(plane==='xy'){ x=apple4d.x; y=apple4d.y; }
+   else if(plane==='zw'){ x=apple4d.z; y=apple4d.w; }
+   else if(plane==='xz'){ x=apple4d.x; y=apple4d.z; }
+   else if(plane==='yw'){ x=apple4d.y; y=apple4d.w; }
+   
+   ctx.fillStyle='red';
+   ctx.beginPath();
+   ctx.arc(x*step+step/2,y*step+step/2,step*0.3,0,Math.PI*2);
+   ctx.fill();
+ }
+
+ // Draw bonus
+ if(bonus4d){
+   let x,y;
+   if(plane==='xy'){ x=bonus4d.x; y=bonus4d.y; }
+   else if(plane==='zw'){ x=bonus4d.z; y=bonus4d.w; }
+   else if(plane==='xz'){ x=bonus4d.x; y=bonus4d.z; }
+   else if(plane==='yw'){ x=bonus4d.y; y=bonus4d.w; }
+   
+   ctx.fillStyle='orange';
+   ctx.beginPath();
+   ctx.arc(x*step+step/2,y*step+step/2,step*0.35,0,Math.PI*2);
+   ctx.fill();
+ }
+}
+
+function draw4dFollower(){
+ let ctx=canvas4dCtxs.follower;
+ if(!ctx) return;
+ let w=ctx.canvas.width, h=ctx.canvas.height;
+ let step=cellSize4d*0.9;
+
+ ctx.fillStyle='#001f3f';
+ ctx.fillRect(0,0,w,h);
+
+ // Always center on head, show head + 2 segments
+ let head=snake4d[0];
+ let cx=w/2, cy=h/2;
+
+ // Draw grid relative to head position
+ ctx.strokeStyle='#1a3a5c';
+ ctx.lineWidth=0.3;
+ for(let i=-3;i<=3;i++){
+   for(let j=-3;j<=3;j++){
+     let x=cx+i*step;
+     let y=cy+j*step;
+     ctx.fillStyle='#2a4a6c';
+     ctx.fillRect(x-1,y-1,2,2);
+   }
+ }
+
+ // Draw snake segments near head (head + 2 segments) as thin cyan line
+ ctx.strokeStyle='#00ffff';
+ ctx.lineWidth=step*0.2;
+ ctx.lineCap='round';
+ ctx.lineJoin='round';
+ ctx.beginPath();
+
+ for(let i=0;i<Math.min(3,snake4d.length);i++){
+   let s=snake4d[i];
+   let dx=s.x-head.x;
+   let dy=s.y-head.y;
+   let x=cx+dx*step;
+   let y=cy+dy*step;
+
+   if(i===0){
+     ctx.moveTo(x,y);
+   } else {
+     ctx.lineTo(x,y);
+   }
+ }
+ ctx.stroke();
+
+ // Draw head as cyan circle
+ if(snake4d.length>0){
+   let s=snake4d[0];
+   let dx=s.x-head.x;
+   let dy=s.y-head.y;
+   ctx.fillStyle='#00ffff';
+   ctx.globalAlpha=1.0;
+   ctx.beginPath();
+   ctx.arc(cx+dx*step,cy+dy*step,step*0.3,0,Math.PI*2);
+   ctx.fill();
+   ctx.globalAlpha=1.0;
+ }
+
+ // Draw apple if visible (within range)
+ if(apple4d){
+   let dx=apple4d.x-head.x;
+   let dy=apple4d.y-head.y;
+   if(Math.abs(dx)<=3 && Math.abs(dy)<=3){
+     ctx.fillStyle='red';
+     ctx.beginPath();
+     ctx.arc(cx+dx*step,cy+dy*step,step*0.35,0,Math.PI*2);
+     ctx.fill();
+   }
+ }
+}
+
+function draw4dFollower2(){
+ let ctx=canvas4dCtxs.follower2;
+ if(!ctx) return;
+ let w=ctx.canvas.width, h=ctx.canvas.height;
+ let step=cellSize4d*0.9;
+
+ ctx.fillStyle='#001f3f';
+ ctx.fillRect(0,0,w,h);
+
+ // View from ZW plane, centered on head
+ let head=snake4d[0];
+ let cx=w/2, cy=h/2;
+
+ // Draw grid
+ ctx.strokeStyle='#1a3a5c';
+ ctx.lineWidth=0.3;
+ for(let i=-3;i<=3;i++){
+   for(let j=-3;j<=3;j++){
+     let x=cx+i*step;
+     let y=cy+j*step;
+     ctx.fillStyle='#2a4a6c';
+     ctx.fillRect(x-1,y-1,2,2);
+   }
+ }
+
+ // Draw snake segments (head + 2) in ZW projection as thin cyan line
+ ctx.strokeStyle='#00ffff';
+ ctx.lineWidth=step*0.2;
+ ctx.lineCap='round';
+ ctx.lineJoin='round';
+ ctx.beginPath();
+
+ for(let i=0;i<Math.min(3,snake4d.length);i++){
+   let s=snake4d[i];
+   let dz=s.z-head.z;
+   let dw=s.w-head.w;
+   let x=cx+dz*step;
+   let y=cy+dw*step;
+
+   if(i===0){
+     ctx.moveTo(x,y);
+   } else {
+     ctx.lineTo(x,y);
+   }
+ }
+ ctx.stroke();
+
+ // Draw head as cyan circle
+ if(snake4d.length>0){
+   let s=snake4d[0];
+   let dz=s.z-head.z;
+   let dw=s.w-head.w;
+   ctx.fillStyle='#00ffff';
+   ctx.globalAlpha=1.0;
+   ctx.beginPath();
+   ctx.arc(cx+dz*step,cy+dw*step,step*0.3,0,Math.PI*2);
+   ctx.fill();
+   ctx.globalAlpha=1.0;
+ }
+}
+
+function draw4dFollowerClose(){
+ let ctx=canvas4dCtxs.follower4d;
+ if(!ctx) return;
+ let w=ctx.canvas.width, h=ctx.canvas.height;
+ let step=cellSize4d*1.1;
+
+ ctx.fillStyle='#001f3f';
+ ctx.fillRect(0,0,w,h);
+
+ // Center on snake head in 4D space
+ let head=snake4d[0];
+ let cx=w/2, cy=h/2;
+
+ // Draw 4D grid - show XY plane with ZW offset indicators
+ ctx.strokeStyle='#1a3a5c';
+ ctx.lineWidth=0.3;
+ 
+ // Draw grid points showing 4D neighborhood
+ for(let dx=-4;dx<=4;dx++){
+   for(let dy=-4;dy<=4;dy++){
+     for(let dz=-2;dz<=2;dz++){
+       for(let dw=-2;dw<=2;dw++){
+         let x=cx+(dx)*step*0.866-(dy)*step*0.866;
+         let y=cy+(dx)*step*0.5+(dy)*step*0.5-(dz+dw)*step*0.3;
+         
+         // Brightness based on ZW distance from head
+         let zwDist=Math.abs(dz)+Math.abs(dw);
+         let alpha=1-(zwDist*0.2);
+         if(alpha>0.1){
+           ctx.fillStyle=`rgba(42,74,108,${alpha})`;
+           ctx.fillRect(x-1.5,y-1.5,3,3);
+         }
+       }
+     }
+   }
+ }
+
+ // Draw snake segments (head + 4 body parts) with 4D depth
+ ctx.strokeStyle='#00ffff';
+ ctx.lineWidth=step*0.25;
+ ctx.lineCap='round';
+ ctx.lineJoin='round';
+ ctx.beginPath();
+
+ for(let i=0;i<Math.min(5,snake4d.length);i++){
+   let s=snake4d[i];
+   let dx=s.x-head.x;
+   let dy=s.y-head.y;
+   let dz=s.z-head.z;
+   let dw=s.w-head.w;
+   
+   let x=cx+dx*step*0.866-dy*step*0.866;
+   let y=cy+dx*step*0.5+dy*step*0.5-(dz+dw)*step*0.3;
+
+   if(i===0){
+     ctx.moveTo(x,y);
+   } else {
+     ctx.lineTo(x,y);
+   }
+ }
+ ctx.stroke();
+
+ // Draw each segment as circle with 4D depth cue
+ for(let i=0;i<Math.min(5,snake4d.length);i++){
+   let s=snake4d[i];
+   let dx=s.x-head.x;
+   let dy=s.y-head.y;
+   let dz=s.z-head.z;
+   let dw=s.w-head.w;
+   
+   let x=cx+dx*step*0.866-dy*step*0.866;
+   let y=cy+dx*step*0.5+dy*step*0.5-(dz+dw)*step*0.3;
+   
+   // Size and brightness based on ZW distance
+   let zwDist=Math.abs(dz)+Math.abs(dw);
+   let size=step*(0.4-zwDist*0.05);
+   let alpha=1-(zwDist*0.15);
+   
+   if(i===0){
+     // Head - bright with glow
+     ctx.fillStyle='#00ffff';
+     ctx.shadowColor='#00ffff';
+     ctx.shadowBlur=15;
+     ctx.beginPath();
+     ctx.arc(x,y,size,0,Math.PI*2);
+     ctx.fill();
+     ctx.shadowBlur=0;
+   } else {
+     // Body segments
+     ctx.fillStyle=`rgba(0,255,255,${alpha})`;
+     ctx.beginPath();
+     ctx.arc(x,y,size*0.8,0,Math.PI*2);
+     ctx.fill();
+   }
+ }
+
+ // Draw apple if nearby in 4D space
+ if(apple4d){
+   let dx=apple4d.x-head.x;
+   let dy=apple4d.y-head.y;
+   let dz=apple4d.z-head.z;
+   let dw=apple4d.w-head.w;
+   
+   // Only draw if within view range
+   if(Math.abs(dx)<=4 && Math.abs(dy)<=4 && Math.abs(dz)<=2 && Math.abs(dw)<=2){
+     let x=cx+dx*step*0.866-dy*step*0.866;
+     let y=cy+dx*step*0.5+dy*step*0.5-(dz+dw)*step*0.3;
+     
+     ctx.fillStyle='#ff4444';
+     ctx.shadowColor='#ff4444';
+     ctx.shadowBlur=12;
+     ctx.beginPath();
+     ctx.arc(x,y,step*0.4,0,Math.PI*2);
+     ctx.fill();
+     ctx.shadowBlur=0;
+   }
+ }
+
+ // Draw bonus if nearby
+ if(bonus4d){
+   let dx=bonus4d.x-head.x;
+   let dy=bonus4d.y-head.y;
+   let dz=bonus4d.z-head.z;
+   let dw=bonus4d.w-head.w;
+   
+   if(Math.abs(dx)<=4 && Math.abs(dy)<=4 && Math.abs(dz)<=2 && Math.abs(dw)<=2){
+     let x=cx+dx*step*0.866-dy*step*0.866;
+     let y=cy+dx*step*0.5+dy*step*0.5-(dz+dw)*step*0.3;
+     
+     ctx.fillStyle='#ffa500';
+     ctx.shadowColor='#ffa500';
+     ctx.shadowBlur=10;
+     ctx.beginPath();
+     ctx.arc(x,y,step*0.35,0,Math.PI*2);
+     ctx.fill();
+     ctx.shadowBlur=0;
+   }
+ }
+}
+
+function draw4dCube(wLevel){
+ let ctx=canvas4dCtxs['cube'+wLevel];
+ if(!ctx) return;
+ let w=ctx.canvas.width, h=ctx.canvas.height;
+ let step=cellSize4d;
+
+ ctx.fillStyle='#001f3f';
+ ctx.fillRect(0,0,w,h);
+
+ // Draw 3D cube grid for this W level
+ ctx.strokeStyle='#1a3a5c';
+ ctx.lineWidth=0.3;
+
+ // Draw isometric-style cube
+ let cx=w/2, cy=h/2;
+ for(let i=0;i<=gridSize4d;i++){
+   for(let j=0;j<=gridSize4d;j++){
+     for(let k=0;k<=gridSize4d;k++){
+       let x=cx+(i-gridSize4d/2)*step*0.866-(j-gridSize4d/2)*step*0.866;
+       let y=cy+(i-gridSize4d/2)*step*0.5+(j-gridSize4d/2)*step*0.5-(k-gridSize4d/2)*step*0.5;
+       ctx.fillStyle='#2a4a6c';
+       ctx.fillRect(x-1,y-1,2,2);
+     }
+   }
+ }
+
+ // Get snake segments at this W level
+ let segmentsAtW=snake4d.filter(s=>s.w===wLevel);
+
+ // Draw snake as thin continuous cyan line
+ if(segmentsAtW.length>1){
+   ctx.strokeStyle='#00ffff';
+   ctx.lineWidth=step*0.15;
+   ctx.lineCap='round';
+   ctx.lineJoin='round';
+   ctx.beginPath();
+
+   for(let i=0;i<segmentsAtW.length;i++){
+     let s=segmentsAtW[i];
+     let x=cx+(s.x-gridSize4d/2)*step*0.866-(s.y-gridSize4d/2)*step*0.866;
+     let y=cy+(s.x-gridSize4d/2)*step*0.5+(s.y-gridSize4d/2)*step*0.5-(s.z-gridSize4d/2)*step*0.5;
+     if(i===0) ctx.moveTo(x,y);
+     else ctx.lineTo(x,y);
+   }
+   ctx.stroke();
+ }
+
+ // Draw head as cyan circle
+ if(segmentsAtW.length>0){
+   let s=segmentsAtW[0];
+   let x=cx+(s.x-gridSize4d/2)*step*0.866-(s.y-gridSize4d/2)*step*0.866;
+   let y=cy+(s.x-gridSize4d/2)*step*0.5+(s.y-gridSize4d/2)*step*0.5-(s.z-gridSize4d/2)*step*0.5;
+   ctx.fillStyle='#00ffff';
+   ctx.beginPath();
+   ctx.arc(x,y,step*0.25,0,Math.PI*2);
+   ctx.fill();
+ }
+
+ // Draw apple if at this W level
+ if(apple4d && apple4d.w===wLevel){
+   let x=cx+(apple4d.x-gridSize4d/2)*step*0.866-(apple4d.y-gridSize4d/2)*step*0.866;
+   let y=cy+(apple4d.x-gridSize4d/2)*step*0.5+(apple4d.y-gridSize4d/2)*step*0.5-(apple4d.z-gridSize4d/2)*step*0.5;
+   ctx.fillStyle='red';
+   ctx.beginPath();
+   ctx.arc(x,y,step*0.35,0,Math.PI*2);
+   ctx.fill();
+ }
+}
+
+// Export debug logs
+function exportLogs(){
+ let rt=[];
+ try{ rt=JSON.parse(localStorage.getItem(LS_AUTO_CHANGELOG)||'[]'); }catch(e){ rt=[]; }
+ let data={
+   debugLog: debugLog,
+   positionHistory: positionHistory,
+   dangerMap: dangerMap,
+   gridSize: gridSize,
+   finalScore: score,
+   embeddedChangelog: EMBEDDED_MIN_CHANGELOG,
+   runtimeChangelog: rt
+ };
+ let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+ let url=URL.createObjectURL(blob);
+ let a=document.createElement('a');
+ a.href=url;
+ a.download='snake_debug_'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';
+ a.click();
+ URL.revokeObjectURL(url);
+}
+
+// Toggle loop alert
+let loopAlertEnabled=false;
+function toggleLoopAlert(){
+ loopAlertEnabled=!loopAlertEnabled;
+ pushRuntimeChangelog('התראת לולאה: '+(loopAlertEnabled?'פעילה':'כבויה'),'loopAlert',0);
+ alert('התראת לולאה: '+ (loopAlertEnabled?'פעילה':'כבויה'));
+}
+
+// Toggle debug details
+let debugDetailsVisible=true;
+function toggleDebugDetails(){
+ debugDetailsVisible=!debugDetailsVisible;
+ let btn=document.getElementById('btnToggleDebugDetails');
+ let details=document.getElementById('debugDetails');
+ let info=document.getElementById('debugInfo');
+ if(debugDetailsVisible){
+   btn.textContent='הסתר פרטים';
+   details.classList.remove('hidden');
+   info.classList.remove('hidden');
+   updateDebugInfo();
+ } else {
+   btn.textContent='הצג פרטים';
+   details.classList.add('hidden');
+   info.classList.add('hidden');
+ }
+ pushRuntimeChangelog('פרטים: '+(debugDetailsVisible?'מוצגים':'מוסתרים'),'debugDetails',0);
+}
+
+// Update debug info display - runs every 100ms
+function updateDebugInfo(){
+ let info=document.getElementById('debugInfo');
+ let grid=document.getElementById('debugGrid');
+
+ // Common debug info for all game modes
+ let commonDetails=[];
+ 
+ if(is4dMode){
+   // 4D Mode
+   let totalCells=gridSize4d*gridSize4d*gridSize4d*gridSize4d;
+   let filledCells=snake4d.length;
+   let fillPercent=(filledCells/totalCells*100).toFixed(2);
+   let emptyPercent=(100-fillPercent).toFixed(2);
+   
+   commonDetails=[
+     {label:'מיקום ראש הנחש', value:`(${snake4d[0].x},${snake4d[0].y},${snake4d[0].z},${snake4d[0].w})`},
+     {label:'מיקום התפוח', value:`(${apple4d.x},${apple4d.y},${apple4d.z},${apple4d.w})`},
+     {label:'מיקום הבונוס', value:bonus4d?`(${bonus4d.x},${bonus4d.y},${bonus4d.z},${bonus4d.w})`:'אין'},
+     {label:'אורך הנחש', value:snake4d.length},
+     {label:'אחוז מלא', value:fillPercent+'%'},
+     {label:'אחוז ריק', value:emptyPercent+'%'},
+     {label:'ניקוד', value:score},
+     {label:'גודל רשת', value:`${gridSize4d}×${gridSize4d}×${gridSize4d}×${gridSize4d}`}
+   ];
+   
+   info.innerHTML='מצב 4D | ניקוד: '+score+' | אורך: '+snake4d.length;
+   
+ } else if(is3dMode){
+   // 3D Mode
+   let totalCells=gridSize3d*gridSize3d*gridSize3d;
+   let filledCells=snake3d.length;
+   let fillPercent=(filledCells/totalCells*100).toFixed(2);
+   let emptyPercent=(100-fillPercent).toFixed(2);
+   
+   commonDetails=[
+     {label:'מיקום ראש הנחש', value:`(${snake3d[0].x},${snake3d[0].y},${snake3d[0].z})`},
+     {label:'מיקום התפוח', value:`(${apple3d.x},${apple3d.y},${apple3d.z})`},
+     {label:'מיקום הבונוס', value:bonus3d?`(${bonus3d.x},${bonus3d.y},${bonus3d.z})`:'אין'},
+     {label:'אורך הנחש', value:snake3d.length},
+     {label:'אחוז מלא', value:fillPercent+'%'},
+     {label:'אחוז ריק', value:emptyPercent+'%'},
+     {label:'ניקוד', value:score},
+     {label:'גודל רשת', value:`${gridSize3d}×${gridSize3d}×${gridSize3d}`}
+   ];
+   
+   info.innerHTML='מצב 3D | ניקוד: '+score+' | אורך: '+snake3d.length;
+   
+ } else {
+   // 2D Mode
+   let totalCells=gridSize*gridSize;
+   let filledCells=snake.length;
+   let fillPercent=(filledCells/totalCells*100).toFixed(2);
+   let emptyPercent=(100-fillPercent).toFixed(2);
+   
+   commonDetails=[
+     {label:'מיקום ראש הנחש', value:`(${snake[0].x},${snake[0].y})`},
+     {label:'מיקום התפוח', value:`(${apple.x},${apple.y})`},
+     {label:'מיקום הבונוס', value:bonus?`(${bonus.x},${bonus.y})`:'אין'},
+     {label:'אורך הנחש', value:snake.length},
+     {label:'אחוז מלא', value:fillPercent+'%'},
+     {label:'אחוז ריק', value:emptyPercent+'%'},
+     {label:'ניקוד', value:score},
+     {label:'גודל רשת', value:`${gridSize}×${gridSize}`}
+   ];
+   
+   info.innerHTML='מצב 2D | ניקוד: '+score+' | אורך: '+snake.length;
+ }
+
+ // Update details grid if visible
+ if(!grid.classList.contains('hidden')){
+   grid.innerHTML='';
+   for(let d of commonDetails){
+     let item=document.createElement('div');
+     item.className='debug-item';
+     item.innerHTML='<div class="debug-label">'+d.label+'</div><div class="debug-value">'+d.value+'</div>';
+     grid.appendChild(item);
+   }
+ }
+}
+
+// Update debug info every 100ms
+setInterval(updateDebugInfo, 100);
+
+// Leaderboard functions
+const LS_LEADERBOARD='snake_leaderboards';
+function getLeaderboards(){
+ try{
+   return JSON.parse(localStorage.getItem(LS_LEADERBOARD)||'{}');
+ }catch(e){ return {}; }
+}
+function saveLeaderboard(key,scores){
+ let lb=getLeaderboards();
+ lb[key]=scores;
+ localStorage.setItem(LS_LEADERBOARD,JSON.stringify(lb));
+}
+function addScore(key,score){
+ let lb=getLeaderboards();
+ if(!lb[key]) lb[key]=[];
+ lb[key].push({score,date:new Date().toISOString()});
+ lb[key].sort((a,b)=>b.score-a.score);
+ lb[key]=lb[key].slice(0,5);
+ saveLeaderboard(key,lb[key]);
+}
+function renderLeaderboard(){
+ let lb=getLeaderboards();
+ const sections=[
+   {id:'lb2dAuto',key:'2d_auto',name:'דו מימדי אוטומטי'},
+   {id:'lb2dManual',key:'2d_manual',name:'דו מימדי ידני'},
+   {id:'lb3dAuto',key:'3d_auto',name:'תלת מימדי אוטומטי'},
+   {id:'lb3dManual',key:'3d_manual',name:'תלת מימדי ידני'},
+   {id:'lb4dAuto',key:'4d_auto',name:'ארבע מימדי אוטומטי'},
+   {id:'lb4dManual',key:'4d_manual',name:'ארבע מימדי ידני'}
+ ];
+ for(let s of sections){
+   let ul=document.getElementById(s.id);
+   if(!ul) continue;
+   ul.innerHTML='';
+   let scores=lb[s.key]||[];
+   if(scores.length===0){
+     ul.innerHTML='<li style="text-align:center;color:var(--text-secondary);">אין שיאים עדיין</li>';
+   }else{
+     for(let i=0;i<scores.length;i++){
+       let sc=scores[i];
+       let li=document.createElement('li');
+       let dateStr=new Date(sc.date).toLocaleDateString('he-IL');
+       li.innerHTML='<span><span class="leaderboard-rank">#'+(i+1)+'</span> <span class="leaderboard-date">'+dateStr+'</span></span><span class="leaderboard-score">'+sc.score+'</span>';
+       ul.appendChild(li);
+     }
+   }
+ }
+}
+function toggleLeaderboard(){
+ let popup=document.getElementById('leaderboardPopup');
+ popup.classList.toggle('visible');
+ renderLeaderboard();
+}
+// Close leaderboard when clicking outside
+document.addEventListener('click',function(e){
+ let popup=document.getElementById('leaderboardPopup');
+ let btn=document.querySelector('.leaderboard-btn');
+ if(popup && popup.classList.contains('visible') && !popup.contains(e.target) && !btn.contains(e.target)){
+   popup.classList.remove('visible');
+ }
+});
+// Save score when game ends
+let originalEndGame=endGame;
+endGame=function(text){
+ let mode=is4dMode?'4d':is3dMode?'3d':'2d';
+ let manual=manualStepMode?'_manual':'_auto';
+ addScore(mode+manual,score);
+ originalEndGame(text);
+}
+
+// Replay functions
+function startReplay(){
+ if(replayHistory.length===0) return;
+ replayMode=true;
+ replayIndex=replayHistory.length-1;
+ document.getElementById('overlay').style.display='none';
+ openReplay();
+ document.getElementById('replayTotalSteps').textContent=replayHistory.length;
+ renderReplay();
+}
+
+function openReplay(){
+ document.getElementById('replayOverlay').style.right='0';
+ document.getElementById('btnOpenReplay').style.right='-60px';
+}
+
+function closeReplay(){
+ replayMode=false;
+ document.getElementById('replayOverlay').style.right='-320px';
+ document.getElementById('btnOpenReplay').style.right='10px';
+}
+
+function renderReplay(){
+ // Calculate snake position at replayIndex
+ let simSnake=[{x:5,y:5},{x:4,y:5},{x:3,y:5},{x:2,y:5},{x:1,y:5}];
+ let simApple={...apple};
+ let simBonus=bonus?{...bonus}:null;
+ let simScore=0;
+ 
+ for(let i=0;i<=replayIndex && i<replayHistory.length;i++){
+   let m=replayHistory[i];
+   let newHead={x:simSnake[0].x+m.dx,y:simSnake[0].y+m.dy};
+   simSnake.unshift(newHead);
+   
+   // Check if ate apple
+   if(newHead.x===simApple.x && newHead.y===simApple.y){
+     simScore++;
+     // Don't pop - snake grows
+   } else {
+     simSnake.pop();
+   }
+ }
+ 
+ // Temporarily replace snake/apple for drawing
+ let origSnake=[...snake];
+ let origApple={...apple};
+ let origBonus=bonus?{...bonus}:null;
+ let origScore=score;
+ 
+ snake=simSnake;
+ apple=simApple;
+ bonus=simBonus;
+ score=simScore;
+ 
+ // Draw
+ if(is3dMode){
+   draw3d();
+ } else if(is4dMode){
+   draw4d();
+ } else {
+   draw();
+ }
+ 
+ // Restore
+ snake=origSnake;
+ apple=origApple;
+ bonus=origBonus;
+ score=origScore;
+ 
+ document.getElementById('replayStepNum').textContent=replayIndex+1;
+}
+
+function replayNextStep(){
+ if(replayIndex<replayHistory.length-1){
+   replayIndex++;
+   renderReplay();
+ }
+}
+
+function replayPrevStep(){
+ if(replayIndex>0){
+   replayIndex--;
+   renderReplay();
+ }
+}
+
+function replayFirstStep(){
+ replayIndex=0;
+ renderReplay();
+}
+
+function replayLastStep(){
+ replayIndex=replayHistory.length-1;
+ renderReplay();
+}
+
+// Keyboard controls for replay
+document.addEventListener('keydown',function(e){
+ if(!replayMode) return;
+
+ if(e.key==='ArrowRight' || e.key==='d'){
+   replayNextStep();
+ } else if(e.key==='ArrowLeft' || e.key==='a'){
+   replayPrevStep();
+ } else if(e.key==='Home'){
+   replayFirstStep();
+ } else if(e.key==='End'){
+   replayLastStep();
+ }
+});
+
+// Personal Notes System
+const LS_NOTES='snake_personal_notes';
+const NOTES_PANEL_KEY='snake_notes_panel_open';
+
+function toggleNotes(){
+ let panel=document.getElementById('notesPanel');
+ let icon=document.getElementById('notesToggleIcon');
+ let text=document.getElementById('notesToggleText');
+ let isOpen=panel.style.display==='block';
+ 
+ if(isOpen){
+   panel.style.display='none';
+   icon.textContent='📝';
+   text.textContent='הערות אישיות';
+   localStorage.setItem(NOTES_PANEL_KEY,'closed');
+ } else {
+   panel.style.display='block';
+   icon.textContent='📂';
+   text.textContent='סגור הערות';
+   localStorage.setItem(NOTES_PANEL_KEY,'open');
+   document.getElementById('personalNotes').focus();
+ }
+}
+
+function saveNotes(){
+ let notes=document.getElementById('personalNotes').value;
+ localStorage.setItem(LS_NOTES,notes);
+ 
+ // Show saved status
+ let status=document.getElementById('notesStatus');
+ status.style.opacity='1';
+ setTimeout(()=>{ status.style.opacity='0'; },1500);
+}
+
+function loadNotes(){
+ // Load notes from localStorage
+ let savedNotes=localStorage.getItem(LS_NOTES)||'';
+ document.getElementById('personalNotes').value=savedNotes;
+ 
+ // Restore panel state
+ let panelState=localStorage.getItem(NOTES_PANEL_KEY)||'closed';
+ if(panelState==='open'){
+   toggleNotes();
+ }
+}
+
+// Load notes on page load
+loadNotes();
+
+startGame();
+</script>
+
+</body>
+</html>
