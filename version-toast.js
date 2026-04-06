@@ -13,8 +13,8 @@
         // New deploy detected — get the semantic version from changelog
         fetch('changelog.json?_=' + Date.now()).then(r => r.json()).then(data => {
           const latest = data[data.length - 1];
-          showToast(latest ? latest.version : deploy);
-        }).catch(() => showToast(deploy));
+          showToast(latest ? latest.version : '1.0.0');
+        }).catch(() => showToast('1.0.0'));
       }
       localStorage.setItem(STORAGE_KEY, deploy);
     }).catch(() => {});
@@ -26,6 +26,7 @@
     toast.id = 'version-toast';
     toast.innerHTML = `
       <span>🆕 גרסה חדשה: <b>v${version}</b></span>
+      <button onclick="location.reload()" title="רענון">⟳</button>
       <a href="changelog.html">מה חדש?</a>
       <button onclick="this.parentElement.remove()">✕</button>
     `;
@@ -49,7 +50,9 @@
       animation: 'toastIn .4s ease',
     });
     toast.querySelector('a').style.cssText = 'color:#39ff14;text-decoration:none;font-weight:700;white-space:nowrap;';
-    toast.querySelector('button').style.cssText = 'background:none;border:none;color:#888;font-size:1.1rem;cursor:pointer;padding:0 0 0 .25rem;';
+    const refreshBtn = toast.querySelectorAll('button')[0];
+    refreshBtn.style.cssText = 'background:none;border:none;color:#39ff14;font-size:1.2rem;cursor:pointer;padding:0;';
+    toast.querySelector('button:last-child').style.cssText = 'background:none;border:none;color:#888;font-size:1.1rem;cursor:pointer;padding:0 0 0 .25rem;';
 
     if (!document.getElementById('toast-style')) {
       const style = document.createElement('style');
