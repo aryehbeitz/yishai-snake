@@ -4,6 +4,7 @@ const path = require('path');
 
 const PORT = 3460;
 const SCORES_PATH = path.join(__dirname, 'scores.json');
+const STATIC_DIR = __dirname;
 
 function loadScores() {
   try { return JSON.parse(fs.readFileSync(SCORES_PATH, 'utf8')); }
@@ -25,6 +26,33 @@ function readBody(req) {
   });
 }
 
+const MIME_TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css',
+  '.js': 'application/javascript',
+  '.json': 'application/json',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+};
+
+function serveStatic(res, filePath) {
+  const ext = path.extname(filePath);
+  const mime = MIME_TYPES[ext] || 'application/octet-stream';
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      res.writeHead(404);
+      res.end('Not found');
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': mime });
+    res.end(data);
+  });
+}
+
 const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -36,12 +64,11 @@ const server = http.createServer(async (req, res) => {
     res.end(JSON.stringify(data));
   };
 
-  // GET /api/scores — full scores object
+  // API routes
   if (req.method === 'GET' && req.url === '/api/scores') {
     return json(200, loadScores());
   }
 
-  // GET /api/leaderboard?mode=classic&limit=10
   if (req.method === 'GET' && req.url.startsWith('/api/leaderboard')) {
     const url = new URL(req.url, `http://localhost`);
     const mode = url.searchParams.get('mode');
@@ -56,7 +83,6 @@ const server = http.createServer(async (req, res) => {
     return json(200, entries.slice(0, limit));
   }
 
-  // POST /api/scores { user, mode, score }
   if (req.method === 'POST' && req.url === '/api/scores') {
     const body = await readBody(req);
     if (!body?.user || !body?.mode || typeof body.score !== 'number') {
@@ -72,9 +98,32 @@ const server = http.createServer(async (req, res) => {
     return json(200, { ok: true, newRecord: false });
   }
 
+  // Static files with .html rewrite
+  let urlPath = req.url.split('?')[0];
+  let filePath = path.join(STATIC_DIR, urlPath);
+
+  // Rewrite: /snake → /snake.html
+  if (!path.extname(urlPath) && !urlPath.endsWith('/')) {
+    const htmlPath = urlPath + '.html';
+    const htmlFile = path.join(STATIC_DIR, htmlPath);
+    if (fs.existsSync(htmlFile)) {
+      return serveStatic(res, htmlFile);
+    }
+  }
+
+  // Default to index.html for /
+  if (urlPath === '/') {
+    return serveStatic(res, path.join(STATIC_DIR, 'index.html'));
+  }
+
+  // Serve the file if it exists
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+    return serveStatic(res, filePath);
+  }
+
   json(404, { error: 'not found' });
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Snake scores API on port ${PORT}`);
+  console.log(`Snake server on port ${PORT}`);
 });

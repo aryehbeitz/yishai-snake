@@ -11,15 +11,62 @@
   <div id="game">
     <div class="game-hud">
       <a href="index.html" class="hud-back">&#8592;</a>
+      <button class="hud-car-select" id="hud-car-select" onclick="openCarSelect()" title="בחירת רכב">🚗</button>
       <span class="hud-score">ניקוד: <span id="score">0</span></span>
       <span class="hud-best">שיא: <span id="best">0</span></span>
+      <span class="hud-coins">🪙 <span id="total-coins">0</span></span>
     </div>
     <canvas id="canvas"></canvas>
-    <div class="game-overlay" id="overlay">
+
+    <!-- Main Menu Overlay -->
+    <div class="game-overlay" id="overlay-menu">
       <h2>🏎️ מרוץ מכוניות</h2>
-      <p>התחמק ממכוניות ואסוף מטבעות</p>
-      <button onclick="startGame()">התחל!</button>
+      <div class="mode-select">
+        <button class="mode-btn" onclick="selectMode('basic')">
+          <span class="mode-icon">🚗</span>
+          <span class="mode-name">בסיסי</span>
+          <span class="mode-desc">התחמק ממכוניות ואסוף מטבעות</span>
+        </button>
+        <button class="mode-btn" onclick="selectMode('advanced')">
+          <span class="mode-icon">🏎️</span>
+          <span class="mode-name">מתקדם</span>
+          <span class="mode-desc">מהירות גבוהה, מחסומים, ותנאי דרך משתנים</span>
+        </button>
+        <button class="mode-btn" onclick="selectMode('map')">
+          <span class="mode-icon">🗺️</span>
+          <span class="mode-name">מבוסס מפות — ניסיוני</span>
+          <span class="mode-desc">נהיגה ברחובות מבוססי מפה</span>
+        </button>
+        <button class="mode-btn" onclick="selectMode('competitive')">
+          <span class="mode-icon">🏆</span>
+          <span class="mode-name">תחרות</span>
+          <span class="mode-desc">מרוץ נגד יריב AI ברמה שלך</span>
+        </button>
+      </div>
     </div>
+
+    <!-- Game Over Overlay -->
+    <div class="game-overlay hidden" id="gameover-menu">
+      <h2>נגמר!</h2>
+      <div class="go-stats">
+        <div class="go-stat"><span class="go-label">ניקוד:</span><span class="go-value" id="go-score">0</span></div>
+        <div class="go-stat"><span class="go-label">מרחק:</span><span class="go-value" id="go-distance">0</span></div>
+        <div class="go-stat"><span class="go-label">מטבעות:</span><span class="go-value" id="go-coins">0</span></div>
+      </div>
+      <div id="go-new-record" class="go-new-record hidden">🏆 שיא חדש!</div>
+      <div class="go-buttons">
+        <button class="go-btn-primary" onclick="restartGame()">שחק שוב</button>
+        <button class="go-btn-secondary" onclick="showMainMenu()">תפריט ראשי</button>
+      </div>
+    </div>
+
+    <!-- Car Select Overlay -->
+    <div class="game-overlay hidden" id="car-select-menu">
+      <h2>🚗 בחירת רכב</h2>
+      <div class="car-grid" id="car-grid"></div>
+      <button class="go-btn-secondary" onclick="closeCarSelect()">חזרה</button>
+    </div>
+
     <div class="mobile-controls" id="mobile-controls">
       <button class="mc-btn" id="mc-right">&#9654;</button>
       <button class="mc-btn" id="mc-left">&#9664;</button>

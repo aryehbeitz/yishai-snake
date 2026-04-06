@@ -39,12 +39,13 @@ body {
 
 .game-hud {
   display: flex;
-  gap: 1rem;
+  gap: .6rem;
   align-items: center;
   padding: .4rem .75rem;
   width: 100%;
   max-width: 400px;
   justify-content: space-between;
+  flex-wrap: wrap;
 }
 .hud-back {
   color: var(--neon);
@@ -54,8 +55,18 @@ body {
   padding: .2rem .5rem;
   border-radius: 8px;
 }
-.hud-score { color: var(--neon); font-weight: 700; font-size: 1rem; }
-.hud-best { color: var(--gold); font-size: .85rem; }
+.hud-car-select {
+  background: none;
+  border: 1px solid var(--neon-dim);
+  color: var(--neon);
+  font-size: 1.2rem;
+  padding: .2rem .5rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.hud-score { color: var(--neon); font-weight: 700; font-size: .95rem; }
+.hud-best { color: var(--gold); font-size: .8rem; }
+.hud-coins { color: var(--gold); font-size: .85rem; }
 
 #canvas {
   display: block;
@@ -69,7 +80,7 @@ body {
   position: absolute;
   inset: 0;
   top: 36px;
-  background: #000c;
+  background: #000d;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -77,9 +88,11 @@ body {
   gap: .75rem;
   z-index: 5;
   border-radius: 8px;
+  padding: 1rem;
+  overflow-y: auto;
 }
 .game-overlay.hidden { display: none; }
-.game-overlay h2 { color: var(--neon); font-size: 1.8rem; text-shadow: var(--neon-glow); }
+.game-overlay h2 { color: var(--neon); font-size: 1.6rem; text-shadow: var(--neon-glow); margin-bottom: .5rem; }
 .game-overlay p { color: var(--text-dim); font-size: .9rem; }
 .game-overlay button {
   background: var(--neon);
@@ -93,6 +106,104 @@ body {
 }
 .game-overlay button:hover { transform: scale(1.05); }
 
+/* Mode Selection */
+.mode-select {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  width: 100%;
+  max-width: 320px;
+}
+.mode-btn {
+  background: var(--bg2);
+  border: 1px solid var(--neon-dim);
+  border-radius: 12px;
+  padding: .8rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  cursor: pointer;
+  transition: all .2s;
+  color: var(--text);
+  text-align: right;
+}
+.mode-btn:hover, .mode-btn:focus {
+  border-color: var(--neon);
+  box-shadow: 0 0 10px var(--neon-dim);
+  transform: scale(1.02);
+}
+.mode-icon { font-size: 1.8rem; flex-shrink: 0; }
+.mode-name { font-weight: 700; font-size: 1rem; flex-shrink: 0; }
+.mode-desc { color: var(--text-dim); font-size: .75rem; }
+
+/* Game Over */
+.go-stats {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: .5rem;
+}
+.go-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg2);
+  padding: .5rem 1rem;
+  border-radius: 8px;
+}
+.go-label { color: var(--text-dim); font-size: .75rem; }
+.go-value { color: var(--neon); font-size: 1.2rem; font-weight: 700; }
+.go-new-record {
+  color: var(--gold);
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-shadow: 0 0 10px #ffd70066;
+  margin-bottom: .5rem;
+}
+.go-new-record.hidden { display: none; }
+.go-buttons { display: flex; gap: .75rem; }
+.go-btn-primary {
+  background: var(--neon) !important;
+  color: #111 !important;
+}
+.go-btn-secondary {
+  background: var(--bg2) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--neon-dim) !important;
+}
+
+/* Car Select */
+.car-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .6rem;
+  width: 100%;
+  max-width: 320px;
+  max-height: 50vh;
+  overflow-y: auto;
+  padding: .5rem;
+}
+.car-card {
+  background: var(--bg2);
+  border: 2px solid var(--neon-dim);
+  border-radius: 10px;
+  padding: .6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .4rem;
+  cursor: pointer;
+  transition: all .2s;
+}
+.car-card:hover { border-color: var(--neon); }
+.car-card.selected { border-color: var(--gold); box-shadow: 0 0 10px #ffd70066; }
+.car-card.locked { opacity: .5; }
+.car-card.locked:hover { border-color: var(--neon-dim); }
+.car-icon { font-size: 2rem; }
+.car-name { font-size: .8rem; font-weight: 700; }
+.car-price { font-size: .7rem; color: var(--gold); }
+.car-owned { font-size: .7rem; color: var(--neon); }
+
+/* Mobile Controls */
 .mobile-controls {
   display: none;
   gap: 1rem;
