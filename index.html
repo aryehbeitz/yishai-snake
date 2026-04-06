@@ -14,14 +14,14 @@
       <div class="user-section" id="user-section"></div>
       <button class="refresh-btn" onclick="location.reload()" title="רענון">&#8635;</button>
     </div>
-    <h1 class="hub-title">ישי</h1>
+    <h1 class="hub-title" id="hub-title"></h1>
     <p class="hub-subtitle">בחר משחק</p>
     <div class="hub-grid">
 
       <a href="snake.html" class="hub-card">
         <div class="hub-card-icon">🐍</div>
         <div class="hub-card-body">
-          <h2>נחש</h2>
+          <h2>סנייק</h2>
           <p>קלאסי, מכשולים, צבעוני, רב-ממדי, AI</p>
         </div>
       </a>
@@ -52,11 +52,13 @@
 
     function renderHubUser() {
       const sec = document.getElementById('user-section');
+      const title = document.getElementById('hub-title');
       if (!hubUser) {
         sec.innerHTML = `
           <input id="hub-username-input" type="text" placeholder="הכנס שם..." maxlength="20">
           <button class="user-btn" onclick="loginHubUser()">כניסה</button>
         `;
+        title.textContent = '';
         document.getElementById('hub-username-input').addEventListener('keydown', e => {
           if (e.key === 'Enter') loginHubUser();
         });
@@ -67,6 +69,7 @@
             <button class="user-logout" onclick="logoutHubUser()">יציאה</button>
           </div>
         `;
+        title.textContent = hubUser;
       }
     }
 
