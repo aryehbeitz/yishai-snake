@@ -7,6 +7,9 @@ const LANES = 5;
 const LANE_W = 60;
 const W = LANES * LANE_W;
 const H = Math.min(window.innerHeight - 140, 600);
+const CAR_W = 40;
+const CAR_H = 70;
+const COIN_R = 12;
 canvas.width = W;
 canvas.height = H;
 
