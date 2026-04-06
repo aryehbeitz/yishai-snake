@@ -12,7 +12,7 @@
       if (lastDeploy && lastDeploy !== deploy) {
         // New deploy detected — get the semantic version from changelog
         fetch('changelog.json?_=' + Date.now()).then(r => r.json()).then(data => {
-          const latest = data[data.length - 1];
+          const latest = data[0];
           showToast(latest ? latest.version : '1.0.0');
         }).catch(() => showToast('1.0.0'));
       }
