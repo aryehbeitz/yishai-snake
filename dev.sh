@@ -8,7 +8,7 @@ echo "Press Ctrl+C to stop"
 echo "---"
 
 # Start static file server with live reload
-npx --yes live-server --port=3000 --no-browser --ignore='*.js' . &
+npx --yes live-server --port=3000 --no-browser --ignore='*.js,.git' . &
 STATIC_PID=$!
 
 # Start API server with nodemon (auto-restarts on server.js changes)
