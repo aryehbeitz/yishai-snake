@@ -39,13 +39,14 @@ body {
 
 .game-hud {
   display: flex;
-  gap: .6rem;
+  gap: .4rem;
   align-items: center;
-  padding: .4rem .75rem;
+  padding: .4rem .5rem;
   width: 100%;
   max-width: 400px;
   justify-content: space-between;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
 }
 .hud-back {
   color: var(--neon);
@@ -64,9 +65,9 @@ body {
   border-radius: 8px;
   cursor: pointer;
 }
-.hud-score { color: var(--neon); font-weight: 700; font-size: .95rem; }
-.hud-best { color: var(--gold); font-size: .8rem; }
-.hud-coins { color: var(--gold); font-size: .85rem; }
+.hud-score { color: var(--neon); font-weight: 700; font-size: .85rem; white-space: nowrap; }
+.hud-best { color: var(--gold); font-size: .75rem; white-space: nowrap; }
+.hud-coins { color: var(--gold); font-size: .8rem; white-space: nowrap; }
 
 #canvas {
   display: block;
