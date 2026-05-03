@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>ג'יפ ודינוזאור</title>
+  <link rel="stylesheet" href="dino.css?v=1">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦕</text></svg>">
+</head>
+<body>
+  <div id="game-wrap">
+    <div class="game-hud">
+      <a href="index.html" class="hud-back">&#8592;</a>
+      <span class="hud-score">ניקוד: <span id="score">0</span></span>
+      <span class="hud-best">שיא: <span id="best">0</span></span>
+    </div>
+
+    <canvas id="canvas"></canvas>
+
+    <!-- Main Menu -->
+    <div class="overlay" id="overlay-menu">
+      <h1 class="menu-title">ג'יפ ודינוזאור</h1>
+      <p class="menu-sub">בחר את הדמות שלך</p>
+      <div class="char-grid">
+        <button class="char-btn" id="btn-dino" onclick="selectChar('dino')">
+          <div class="char-preview" id="preview-dino"></div>
+          <span class="char-name">דינוזאור</span>
+        </button>
+        <button class="char-btn" id="btn-jeep" onclick="selectChar('jeep')">
+          <div class="char-preview" id="preview-jeep"></div>
+          <span class="char-name">ג'יפ</span>
+        </button>
+      </div>
+      <button class="start-btn" id="start-btn" onclick="startGame()">התחל</button>
+      <p class="controls-hint">רווח / חץ למעלה / נגיעה — קפיצה</p>
+    </div>
+
+    <!-- Game Over -->
+    <div class="overlay hidden" id="overlay-gameover">
+      <h2 class="go-title">נגמר!</h2>
+      <div class="go-stats">
+        <div class="go-stat"><span>ניקוד</span><strong id="go-score">0</strong></div>
+        <div class="go-stat"><span>שיא</span><strong id="go-best">0</strong></div>
+      </div>
+      <div id="go-record" class="go-record hidden">שיא חדש!</div>
+      <div class="go-buttons">
+        <button class="start-btn" onclick="restartGame()">שחק שוב</button>
+        <button class="back-btn" onclick="showMenu()">תפריט</button>
+      </div>
+    </div>
+
+    <!-- Mobile jump button -->
+    <button class="mobile-jump" id="mobile-jump" ontouchstart="onJumpInput()">קפוץ</button>
+  </div>
+
+  <script src="dino.js?v=1"></script>
+  <script src="version-toast.js?v=1"></script>
+</body>
+</html>

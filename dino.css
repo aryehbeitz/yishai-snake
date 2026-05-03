@@ -1,0 +1,222 @@
+/* ===== DINO RUNNER GAME ===== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #111;
+  color: #fff;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#game-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* HUD */
+.game-hud {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  width: 100%;
+  max-width: 700px;
+  justify-content: space-between;
+}
+
+.hud-back {
+  color: #39ff14;
+  text-decoration: none;
+  font-size: 22px;
+  font-weight: bold;
+  padding: 4px 8px;
+  border: 1px solid #39ff14;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+.hud-back:hover { background: #39ff1422; }
+
+.hud-score, .hud-best {
+  font-size: 15px;
+  color: #aaa;
+}
+.hud-score span, .hud-best span {
+  color: #39ff14;
+  font-weight: bold;
+}
+
+/* Canvas */
+#canvas {
+  border: 2px solid #39ff1444;
+  border-radius: 8px;
+  display: block;
+  background: #1a1a2e;
+}
+
+/* Overlays */
+.overlay {
+  position: absolute;
+  top: 40px;
+  left: 0; right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+  z-index: 10;
+}
+.overlay.hidden { display: none; }
+
+.menu-title {
+  font-size: 32px;
+  color: #39ff14;
+  text-shadow: 0 0 20px #39ff1488;
+  margin-bottom: 8px;
+}
+.menu-sub {
+  color: #888;
+  margin-bottom: 24px;
+  font-size: 15px;
+}
+
+/* Character selection */
+.char-grid {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.char-btn {
+  background: #1e1e3a;
+  border: 2px solid #333;
+  border-radius: 12px;
+  padding: 16px 24px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  transition: border-color 0.2s, transform 0.1s;
+  color: #ccc;
+  font-size: 15px;
+}
+.char-btn:hover { border-color: #39ff14; }
+.char-btn.selected {
+  border-color: #39ff14;
+  background: #1e3a1e;
+  box-shadow: 0 0 16px #39ff1444;
+}
+
+.char-preview {
+  width: 64px;
+  height: 64px;
+}
+
+.char-name {
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.start-btn {
+  background: #39ff14;
+  color: #111;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 36px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  margin-bottom: 12px;
+}
+.start-btn:hover { opacity: 0.85; }
+.start-btn:active { transform: scale(0.97); }
+
+.back-btn {
+  background: transparent;
+  color: #aaa;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.back-btn:hover { border-color: #888; color: #fff; }
+
+.controls-hint {
+  color: #555;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* Game over */
+.go-title {
+  font-size: 36px;
+  color: #ff4444;
+  margin-bottom: 20px;
+  text-shadow: 0 0 20px #ff444488;
+}
+
+.go-stats {
+  display: flex;
+  gap: 40px;
+  margin-bottom: 16px;
+}
+.go-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.go-stat span { color: #888; font-size: 13px; }
+.go-stat strong { color: #39ff14; font-size: 28px; }
+
+.go-record {
+  color: #ffd700;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-shadow: 0 0 10px #ffd70088;
+}
+.go-record.hidden { display: none; }
+
+.go-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Mobile jump button */
+.mobile-jump {
+  display: none;
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #39ff1433;
+  border: 2px solid #39ff14;
+  color: #39ff14;
+  font-size: 18px;
+  font-weight: bold;
+  padding: 16px 48px;
+  border-radius: 50px;
+  cursor: pointer;
+  z-index: 20;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+@media (max-width: 600px) or (pointer: coarse) {
+  .mobile-jump { display: block; }
+}
+@media (pointer: coarse) {
+  .mobile-jump { display: block; }
+}
