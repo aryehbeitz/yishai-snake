@@ -202,34 +202,59 @@ function update() {
   }
 
   // Spawn obstacles
-  let spawnInterval = 120;
-  if (s.mode === 'advanced') spawnInterval = 90;
-  if (s.mode === 'map') spawnInterval = 100;
-  if (s.mode === 'competitive') spawnInterval = 80;
+  let spawnInterval = 150;
+  if (s.mode === 'advanced') spawnInterval = 120;
+  if (s.mode === 'map') spawnInterval = 140;
+  if (s.mode === 'competitive') spawnInterval = 110;
 
-  if (s.distance - s.lastObstacle > spawnInterval + Math.random() * 80) {
-    const lane = Math.floor(Math.random() * LANES);
-    s.obstacles.push({ lane, y: -CAR_H, color: randomEnemyColor() });
-    // More obstacles in advanced/competitive
-    const extraChance = s.mode === 'advanced' ? 0.4 : s.mode === 'competitive' ? 0.5 : 0.3;
-    if (Math.random() > extraChance) {
-      let lane2 = lane;
-      while (lane2 === lane) lane2 = Math.floor(Math.random() * LANES);
-      s.obstacles.push({ lane: lane2, y: -CAR_H - 30, color: randomEnemyColor() });
+  // Max obstacles on screen to prevent lane saturation
+  const maxObstacles = s.mode === 'advanced' || s.mode === 'competitive' ? 5 : 4;
+
+  if (s.obstacles.length < maxObstacles && s.distance - s.lastObstacle > spawnInterval + Math.random() * 80) {
+    // Find lanes not recently blocked near spawn area (top of screen)
+    const nearSpawn = s.obstacles.filter(o => o.y < CAR_H * 2);
+    const nearSpawnLanes = new Set(nearSpawn.map(o => o.lane));
+    const freeLanes = [];
+    for (let i = 0; i < LANES; i++) {
+      if (!nearSpawnLanes.has(i)) freeLanes.push(i);
+    }
+    // Need at least 2 free lanes to guarantee passage
+    if (freeLanes.length >= 2) {
+      const lane = freeLanes[Math.floor(Math.random() * freeLanes.length)];
+      s.obstacles.push({ lane, y: -CAR_H, color: randomEnemyColor() });
+      // Second obstacle only if 3+ lanes remain free
+      const remainingFree = freeLanes.filter(l => l !== lane);
+      const extraChance = s.mode === 'advanced' ? 0.6 : s.mode === 'competitive' ? 0.6 : 0.65;
+      if (remainingFree.length >= 2 && Math.random() > extraChance) {
+        const lane2 = remainingFree[Math.floor(Math.random() * remainingFree.length)];
+        s.obstacles.push({ lane: lane2, y: -CAR_H - 40, color: randomEnemyColor() });
+      }
     }
     s.lastObstacle = s.distance;
   }
 
   // Barriers (advanced mode)
   if (s.mode === 'advanced') {
-    if (s.distance - s.lastBarrier > 200 + Math.random() * 100) {
-      // Multi-lane barrier with gap
-      const gapLane = Math.floor(Math.random() * LANES);
+    if (s.distance - s.lastBarrier > 260 + Math.random() * 120) {
+      // Multi-lane barrier with gap — pick gap lane away from current obstacles near top
+      const nearTop = s.obstacles.filter(o => o.y < CAR_H * 3);
+      const blockedNearTop = new Set(nearTop.map(o => o.lane));
+      let gapLane = Math.floor(Math.random() * LANES);
+      // Prefer a lane that's not blocked near top
+      const unblockedLanes = [];
+      for (let i = 0; i < LANES; i++) {
+        if (!blockedNearTop.has(i)) unblockedLanes.push(i);
+      }
+      if (unblockedLanes.length > 0) {
+        gapLane = unblockedLanes[Math.floor(Math.random() * unblockedLanes.length)];
+      }
       for (let i = 0; i < LANES; i++) {
         if (i !== gapLane) {
           s.barriers.push({ lane: i, y: -CAR_H });
         }
       }
+      // Remove any obstacles in the gap lane near the barrier to ensure passage
+      s.obstacles = s.obstacles.filter(o => !(o.lane === gapLane && o.y < CAR_H * 2));
       s.lastBarrier = s.distance;
     }
     s.barriers.forEach(b => b.y += s.speed * speedMult);
