@@ -76,6 +76,7 @@ http.createServer((req, res) => {
   }
 
   let body = '';
+  req.setEncoding('utf8');   // multi-byte chars split across chunks otherwise
   req.on('data', c => body += c);
   req.on('end', () => {
     if (SECRET) {

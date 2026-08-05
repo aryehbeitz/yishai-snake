@@ -18,6 +18,7 @@ function saveScores(scores) {
 function readBody(req) {
   return new Promise((resolve) => {
     let data = '';
+    req.setEncoding('utf8');   // multi-byte chars split across chunks otherwise
     req.on('data', c => data += c);
     req.on('end', () => {
       try { resolve(JSON.parse(data)); }
