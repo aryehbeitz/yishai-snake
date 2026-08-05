@@ -48,14 +48,23 @@ body {
   flex-wrap: nowrap;
   overflow-x: auto;
 }
-.hud-back {
-  color: var(--neon);
+.home-btn {
+  background: var(--bg2, #111);
+  border: 1px solid var(--neon-dim, #1a4d1a);
+  color: var(--neon, #39ff14);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-decoration: none;
-  font-size: 1.2rem;
-  border: 1px solid var(--neon-dim);
-  padding: .2rem .5rem;
-  border-radius: 8px;
+  flex-shrink: 0;
 }
+.home-btn:hover { border-color: var(--neon, #39ff14); box-shadow: 0 0 8px var(--neon, #39ff14); }
 .hud-car-select {
   background: none;
   border: 1px solid var(--neon-dim);

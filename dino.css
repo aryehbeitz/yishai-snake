@@ -30,17 +30,23 @@ body {
   justify-content: space-between;
 }
 
-.hud-back {
+.home-btn {
+  background: #0d1a0d;
+  border: 1px solid #1a4d1a;
   color: #39ff14;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-decoration: none;
-  font-size: 22px;
-  font-weight: bold;
-  padding: 4px 8px;
-  border: 1px solid #39ff14;
-  border-radius: 6px;
-  transition: background 0.2s;
+  flex-shrink: 0;
 }
-.hud-back:hover { background: #39ff1422; }
+.home-btn:hover { border-color: #39ff14; box-shadow: 0 0 8px #39ff14; }
 
 .hud-score, .hud-best {
   font-size: 15px;

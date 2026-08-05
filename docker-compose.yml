@@ -4,7 +4,7 @@ services:
     container_name: yishai-snake
     restart: unless-stopped
     ports:
-      - "3460:3460"
+      - "127.0.0.1:3460:3460"
     volumes:
       - /home/admin/dev/yishai-snake:/app
       - /home/admin/.claude:/home/node/.claude

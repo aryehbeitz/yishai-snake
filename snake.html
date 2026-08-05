@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>SNAKE - משחק נחש</title>
-  <link rel="stylesheet" href="style.css?v=1778525212">
+  <link rel="stylesheet" href="style.css?v=1779304385">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
 </head>
 <body>
@@ -50,7 +50,7 @@
   <!-- ===== GAME SCREEN ===== -->
   <div id="game-screen" class="game-screen">
     <div class="game-header">
-      <button class="game-back" onclick="backToHome()">&#8592; חזרה</button>
+      <button class="home-btn" onclick="backToHome()" title="דף הבית">&#8962;</button>
       <span class="game-score">ניקוד: <span id="game-score-display">0</span></span>
       <button class="game-pause" id="pause-btn" onclick="togglePause()">&#10074;&#10074;</button>
       <span class="game-mode-title" id="game-mode-title"></span>
@@ -74,7 +74,7 @@
   <!-- ===== ND GAME SCREEN ===== -->
   <div id="nd-screen" class="game-screen">
     <div class="game-header">
-      <button class="game-back" onclick="ndBackToHome()">&#8592; חזרה</button>
+      <button class="home-btn" onclick="ndBackToHome()" title="דף הבית">&#8962;</button>
       <span class="game-score">ניקוד: <span id="nd-score-display">0</span></span>
       <button class="game-pause" id="nd-pause-btn" onclick="ndTogglePause()">&#10074;&#10074;</button>
       <span class="game-mode-title" id="nd-mode-title"></span>
@@ -97,7 +97,7 @@
   <!-- ===== AI GAME SCREEN ===== -->
   <div id="ai-screen" class="game-screen">
     <div class="game-header">
-      <button class="game-back" onclick="aiBackToHome()">&#8592; חזרה</button>
+      <button class="home-btn" onclick="aiBackToHome()" title="דף הבית">&#8962;</button>
       <span class="game-score">ניקוד: <span id="ai-score-display">0</span></span>
       <button class="game-pause" id="ai-pause-btn" onclick="aiTogglePause()">&#10074;&#10074;</button>
       <span class="game-mode-title" id="ai-mode-title">AI</span>
@@ -123,7 +123,7 @@
     <div id="settings-content"></div>
   </div>
 
-  <script src="game.js?v=1778525212"></script>
-  <script src="version-toast.js?v=1778525212"></script>
+  <script src="game.js?v=1779304385"></script>
+  <script src="version-toast.js?v=1779304385"></script>
 </body>
 </html>
